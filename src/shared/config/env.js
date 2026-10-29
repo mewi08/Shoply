@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const required = ['DB_HOST', 'DB_PORT', 'DB_USER', 'DB_NAME', 'JWT_SECRET'];
 const missing = required.filter((key) => !process.env[key]);
 
