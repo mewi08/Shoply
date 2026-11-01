@@ -11,8 +11,8 @@
     "dev": "node --watch src/server.js",
     "migrate": "knex migrate:latest",
     "migrate:rollback": "knex migrate:rollback --all",
-    "seed":"knex seed:run",
-    "db:reset":"knex migrate:rollback --all && knex migrate:latest && knex seed:run"
+    "seed": "knex seed:run",
+    "db:reset": "knex migrate:rollback --all && knex migrate:latest && knex seed:run"
   },
   "keywords": [],
   "author": "Melanie Tello",
