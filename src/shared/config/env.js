@@ -18,6 +18,7 @@ if(secret.length < 32){
 exports.config = {
   port: Number(process.env.PORT) || 3000,
   environment: process.env.NODE_ENV || 'development',
+  trustProxy: process.env.TRUST_PROXY ? Number(process.env.TRUST_PROXY) : false,
   db: {
     host: process.env.DB_HOST,
     port: Number(process.env.DB_PORT),
