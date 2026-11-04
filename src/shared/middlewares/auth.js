@@ -21,7 +21,7 @@ exports.verifyToken = async (req, res, next) => {
   }
 
   const user = await db('usuarios').where({ id: pyload.id })
-    .select('id', 'username', 'rol', 'estado').first();
+    .select('id', 'username', 'rol', 'estado', 'idtienda').first();
 
   if (!user || !user.estado)
     return unauthorized(res, 'Usuario inactivo o inexistente');
