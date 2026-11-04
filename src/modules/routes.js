@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const { verifyToken, requireLevel } = require('../shared/middlewares/auth');
 
+router.use('/auth', require('./auth/auth.routes'));
 router.use('/marcas', require('./catalogs/brands/brands.routes'));
 router.use('/categorias', require('./catalogs/categories/categories.routes'));
 router.use('/unidades-medida', require('./catalogs/units/units.routes'));
