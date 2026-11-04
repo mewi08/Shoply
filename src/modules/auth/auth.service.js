@@ -40,7 +40,7 @@ exports.login = async (data) => {
 
 exports.me = async (id) => {
   const user = await db('usuarios as u')
-    .join('personas as p')
+    .join('personas as p', 'p.id', 'u.idpersona')
     .where('u.id', id)
     .select(
       'u.id',
@@ -49,6 +49,7 @@ exports.me = async (id) => {
       'u.idtienda',
       'p.nombres',
       'p.ape_paterno',
+      'p.ape_materno'
     )
     .first();
   if(!user) throw httpError(401, 'Usuario no encontrado');
