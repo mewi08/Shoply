@@ -20,7 +20,7 @@ exports.verifyToken = async (req, res, next) => {
     return unauthorized(res, 'Sesión inválida o expirada');
   }
 
-  const user = await db('usuario').where({ id: pyload.id })
+  const user = await db('usuarios').where({ id: pyload.id })
     .select('id', 'username', 'rol', 'estado').first();
 
   if (!user || !user.estado)
