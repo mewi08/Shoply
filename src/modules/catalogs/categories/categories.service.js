@@ -33,6 +33,6 @@ exports.update = async (id, data) => {
 };
 
 exports.remove = async (id) => {
-    const num = await db('marcas').where({ id: id }).del();
-    if(!num) throw httpError(404, 'Categoria no encontrada');
+  const num = await db('categorias').where({ id: id }).del();
+  if(!num) throw httpError(404, 'Categoria no encontrada');
 };
