@@ -1,10 +1,11 @@
 const router = require('express').Router();
 const controller = require('./stores.controller');
+const { requireLevel } = require('../../shared/middlewares/auth');
 
-router.get('/', controller.list);
-router.get('/:id', controller.get);
-router.post('/', controller.create);
-router.put('/:id', controller.update);
-router.delete('/:id', controller.remove);
+router.get('/', requireLevel('superadmin'), controller.list);
+router.get('/mi-tienda', requireLevel('admin', 'user'), controller.get);
+router.post('/', requireLevel('superadmin'), controller.create);
+router.put('/mi-tienda', requireLevel('admin'), controller.update);
+router.patch('/:id/estado', requireLevel('superadmin'), controller.remove);
 
 module.exports = router;

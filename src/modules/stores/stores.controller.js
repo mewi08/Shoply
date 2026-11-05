@@ -12,7 +12,7 @@ exports.list = async (req, res, next) => {
 
 exports.get = async (req, res, next) => {
   try {
-    const id = req.params.id;
+    const id = req.user.idtienda;
     const data = await service.get(id);
     sendSuccess(res, { data });
   } catch (err) {
@@ -32,7 +32,7 @@ exports.create = async (req, res, next) => {
 
 exports.update = async (req, res, next) => {
   try {
-    const id = req.params.id;
+    const id = req.user.idtienda;
     const data = req.body;
     await service.update(id, data);
     sendSuccess(res, { message: 'Tienda actualizada' });
@@ -45,7 +45,7 @@ exports.remove = async (req, res, next) => {
   try {
     const id = req.params.id;
     await service.remove(id);
-    sendSuccess(res, { message: 'Tienda eliminada' });
+    sendSuccess(res, { message: 'Estado de tienda actualizada' });
   } catch (err) {
     next(err);
   }
