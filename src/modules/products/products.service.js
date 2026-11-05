@@ -3,36 +3,71 @@ const { httpError } = require('../../shared/utils/response');
 const { requireFields } = require('../../shared/utils/validators');
 const { pick } = require('../../shared/utils/sanitize');
 
-const allowedFields = ['idtienda', 'idmarca', 'idcategoria', 'idunidadmedida', 'nombre', 'codigo', 'presentacion', 'precio_venta', 'cantidad_minima'];
+const allowedFields = [
+  'idtienda',
+  'idmarca',
+  'idcategoria',
+  'idunidadmedida',
+  'nombre',
+  'codigo',
+  'descripcion',
+  'presentacion',
+  'precio_venta',
+  'cantidad_minima',
+];
 
 exports.list = async (idtienda) => {
-  const data = await db('productos').select('id', ...allowedFields).where({ idtienda: idtienda});
+  const data = await db('productos')
+    .select('id', ...allowedFields)
+    .where({ idtienda, estado: true })
+    .orderBy('codigo');
   return data;
 };
 
-exports.get = async (id) => {
-  const row = await db('productos').where({ id: id }).first();
-  if(!row) throw httpError(404, 'Producto no encontrado');
+exports.get = async (id, idtienda) => {
+  const row = await db('productos').where({ id, idtienda }).first();
+  if (!row) throw httpError(404, 'Producto no encontrado');
   return row;
 };
 
-exports.create = async (data) => {
-  if(!data) throw httpError(400, 'Datos inválidos');
+exports.create = async (data, idtienda) => {
+  if (!data) throw httpError(400, 'Datos inválidos');
   const cleanData = pick(data, allowedFields);
-  requireFields(cleanData, ['idtienda', 'idcategoria', 'idunidadmedida', 'nombre', 'codigo', 'precio_venta', 'cantidad_minima']);
+  cleanData.idtienda = idtienda;
+  requireFields(cleanData, [
+    'idtienda',
+    'idcategoria',
+    'idunidadmedida',
+    'nombre',
+    'codigo',
+    'precio_venta',
+    'cantidad_minima',
+  ]);
   const [id] = await db('productos').insert(cleanData);
   return { id };
 };
 
-exports.update = async (id, data) => {
-  if(!data) throw httpError(400, 'Datos inválidos');
+exports.update = async (id, data, idtienda) => {
+  if (!data) throw httpError(400, 'Datos inválidos');
   const cleanData = pick(data, allowedFields);
-  requireFields(cleanData, ['idtienda', 'idcategoria', 'idunidadmedida', 'nombre', 'codigo', 'precio_venta', 'cantidad_minima']);
-  const num = await db('productos').where({ id: id}).update(cleanData);
-  if(!num) throw httpError(404, 'Producto no encontrado');
+  cleanData.idtienda = idtienda;
+  requireFields(cleanData, [
+    'idtienda',
+    'idcategoria',
+    'idunidadmedida',
+    'nombre',
+    'codigo',
+    'precio_venta',
+    'cantidad_minima',
+  ]);
+  const num = await db('productos').where({ id: id }).update(cleanData);
+  if (!num) throw httpError(404, 'Producto no encontrado');
 };
 
-exports.remove = async (id) => {
-  const row = await this.get(id);
-  await db('productos').where({ id: id }).update({ estado: !row.estado});
+exports.remove = async (id, idtienda) => {
+  const num = await db('productos')
+    .where({ id, idtienda })
+    .update({ estado: db.raw('NOT estado') });
+
+  if (!num) throw httpError(404, 'Producto no encontrado');
 };
