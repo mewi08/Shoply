@@ -30,4 +30,8 @@ exports.config = {
     secret: process.env.JWT_SECRET,
     expires: process.env.JWT_EXPIRES_IN || '8h',
   },
+  superadmin: {
+    username: process.env.SUPERADMIN_USER,
+    password: process.env.SUPERADMIN_PASSWORD,
+  },
 };
