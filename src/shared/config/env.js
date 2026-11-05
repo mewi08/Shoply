@@ -33,5 +33,9 @@ exports.config = {
   superadmin: {
     username: process.env.SUPERADMIN_USER,
     password: process.env.SUPERADMIN_PASSWORD,
+    names: process.env.SUPERADMIN_NOMBRES,
+    apePaterno: process.env.SUPERADMIN_APE_PATERNO,
+    tipoDoc: process.env.SUPERADMIN_TIPO_DOCUMENTO,
+    numDoc: process.env.SUPERADMIN_NUM_DOCUMENTO,
   },
 };
