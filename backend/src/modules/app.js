@@ -12,7 +12,7 @@ const { notFound, errorHandler } = require('../shared/middlewares/error-handler'
 
 const app = express();
 const isProd = config.environment === 'production';
-const distPath = path.join(__dirname, '..', '..', '...', 'frontend', 'dist');
+const distPath = path.join(__dirname, '..', '..', '..', 'frontend', 'dist');
 
 if(config.trustProxy) app.set('trust proxy', config.trustProxy);
 
