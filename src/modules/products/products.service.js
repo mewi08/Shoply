@@ -60,7 +60,7 @@ exports.update = async (id, data, idtienda) => {
     'precio_venta',
     'cantidad_minima',
   ]);
-  const num = await db('productos').where({ id: id }).update(cleanData);
+  const num = await db('productos').where({ id, idtienda }).update(cleanData);
   if (!num) throw httpError(404, 'Producto no encontrado');
 };
 
