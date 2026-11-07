@@ -12,6 +12,7 @@ const { notFound, errorHandler } = require('../shared/middlewares/error-handler'
 
 const app = express();
 const isProd = config.environment === 'production';
+const distPath = path.join(__dirname, '..', '..', '...', 'frontend', 'dist');
 
 if(config.trustProxy) app.set('trust proxy', config.trustProxy);
 
@@ -30,11 +31,11 @@ app.use(helmet({
 
 app.use(express.json());
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, '..', 'public')));
+app.use(express.static(distPath));
 
 app.use('/api', apiLimiter, routes);
-app.get('/', (req, res) => { res.redirect('/index.html')});
 app.use('/api', notFound);
+app.use((req, res) => { res.sendFile(path.join(distPath, 'index.html')) });
 app.use(errorHandler);
 
 module.exports = app;
