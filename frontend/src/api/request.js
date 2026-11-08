@@ -2,6 +2,7 @@ async function request(endpoint, method = "GET", data) {
   const options = {
     method,
     headers: { "Content-Type": "application/json" },
+    credentials: "include",
   };
 
   if (data) options.body = JSON.stringify(data);
