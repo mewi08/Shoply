@@ -19,7 +19,7 @@ exports.get = async (id) => {
 exports.create = async (data) => {
   if (!data) throw httpError(400, 'Datos inválidos');
   const cleanData = pick(data, allowedFields);
-  requireFields(cleanData, ['nombre', 'abreviatura']);
+  requireFields(cleanData, ['nombre']);
   const [id] = await db('unidades_medida').insert(cleanData);
   return { id };
 };
@@ -27,7 +27,7 @@ exports.create = async (data) => {
 exports.update = async (id, data) => {
   if (!data) throw httpError(400, 'Datos inválidos');
   const cleanData = pick(data, allowedFields);
-  requireFields(cleanData, ['nombre', 'abreviatura']);
+  requireFields(cleanData, ['nombre']);
   const num = await db('unidades_medida').where({ id: id }).update(cleanData);
   if (!num) throw httpError(404, 'Unidad de medida no encontrada');
 };
