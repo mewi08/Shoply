@@ -1,0 +1,149 @@
+:root {
+  --verde-caja: #0e5e4e;
+  --verde-caja-oscuro: #0a4a3e;
+  --verde-suave: #e3f0ec;
+  --tinta: #14302b;
+  --tinta-suave: #4a5f5a;
+  --papel: #ffffff;
+  --etiqueta: #f2c14e;
+  --borde: #5f746f;
+  --linea: #b9c6c2;
+  --error: #8c1d18;
+  --error-borde: #b3261e;
+  --error-fondo: #fdecea;
+
+  --fuente-titulo: "Bricolage Grotesque Variable", "Trebuchet MS", system-ui, sans-serif;
+  --fuente-texto: "Figtree Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --radio: 0.5rem;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--fuente-texto);
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--tinta);
+  background: var(--papel);
+}
+
+button,
+input {
+  font: inherit;
+}
+
+:focus-visible {
+  outline: 3px solid var(--verde-caja);
+  outline-offset: 2px;
+}
+
+/* ---------- Formularios (reutilizables en registro) ---------- */
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.form-label {
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.form-input {
+  width: 100%;
+  min-height: 3rem;
+  padding: 0.625rem 0.875rem;
+  color: var(--tinta);
+  background: var(--papel);
+  border: 2px solid var(--borde);
+  border-radius: var(--radio);
+}
+
+.form-input[aria-invalid="true"] {
+  border-color: var(--error-borde);
+}
+
+.form-error {
+  margin: 0;
+  padding: 0.75rem 0.875rem;
+  font-size: 0.9375rem;
+  color: var(--error);
+  background: var(--error-fondo);
+  border-left: 4px solid var(--error-borde);
+  border-radius: 0 var(--radio) var(--radio) 0;
+}
+
+.form-password {
+  position: relative;
+}
+
+.form-password .form-input {
+  padding-right: 3.25rem;
+}
+
+.form-toggle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  padding: 0;
+  color: var(--tinta-suave);
+  background: transparent;
+  border: 0;
+  border-radius: 0 var(--radio) var(--radio) 0;
+  cursor: pointer;
+}
+
+.form-toggle:focus-visible {
+  outline-offset: -3px;
+}
+
+.form-toggle[aria-pressed="true"] {
+  color: var(--verde-caja);
+  background: var(--verde-suave);
+}
+
+/* ---------- Botones ---------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3rem;
+  padding: 0.625rem 1.25rem;
+  font-weight: 700;
+  border: 2px solid transparent;
+  border-radius: var(--radio);
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.btn-primary {
+  color: var(--papel);
+  background: var(--verde-caja);
+}
+
+.btn-primary:hover {
+  background: var(--verde-caja-oscuro);
+}
+
+.btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn {
+    transition: none;
+  }
+}
