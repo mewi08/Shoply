@@ -2,19 +2,18 @@ const db = require('../../shared/config/db');
 const { httpError } = require('../../shared/utils/response');
 const { requireFields } = require('../../shared/utils/validators');
 const { pick } = require('../../shared/utils/sanitize');
-const { scoped } = require('../../shared/utils/permissions');
 
 const allowedFields = ['nombre', 'descripcion', 'direccion', 'telefono', 'ruc'];
 
-exports.list = async (user) => {
-  const data = await scoped(db('tiendas'), user)
+exports.list = async () => {
+  const data = await db('tiendas')
     .select('id', 'nombre', 'direccion', 'telefono', 'estado')
     .orderBy('nombre');
   return data;
 };
 
-exports.get = async (id, user) => {
-  const row = await scoped(db('tiendas'), user).where({ id }).first();
+exports.get = async (id) => {
+  const row = await db('tiendas').where({ id }).first();
   if (!row) throw httpError(404, 'Tienda no encontrada');
   return row;
 };
@@ -37,7 +36,7 @@ exports.update = async (id, data) => {
 
 exports.remove = async (id) => {
   const num = await db('tiendas')
-    .where({ id: id })
+    .where({ id })
     .update({ estado: db.raw('NOT estado') });
   if (!num) throw httpError(404, 'Tienda no encontrada');
 };
