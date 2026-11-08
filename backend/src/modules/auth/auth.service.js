@@ -15,9 +15,14 @@ exports.login = async (data) => {
   }
 
   const user = await db('usuarios').where({ username }).first();
+
+  if (!user || !user.estado) {
+    throw httpError(401, 'Usuario o contraseña incorrecto');
+  }
+
   const valid = await comparePassword(password, user.password);
 
-  if (!user || !user.estado || !valid) {
+  if (!valid) {
     throw httpError(401, 'Usuario o contraseña incorrecto');
   }
 
@@ -35,6 +40,7 @@ exports.login = async (data) => {
     },
   );
 
+  await db('usuarios').where({ id: user.id }).update({ ultimo_acceso: db.fn.now() });
   return token;
 };
 
@@ -49,7 +55,7 @@ exports.me = async (id) => {
       'u.idtienda',
       'p.nombres',
       'p.ape_paterno',
-      'p.ape_materno'
+      'p.ape_materno',
     )
     .first();
   if(!user) throw httpError(401, 'Usuario no encontrado');
