@@ -10,7 +10,7 @@ exports.up = async function(knex) {
     t.string('direccion', 255).notNullable();
     t.string('telefono', 9).notNullable();
     t.string('ruc', 11).unique();
-    t.boolean('estado').notNullable().defaultTo(true);
+    t.boolean('estado').notNullable().defaultTo(false);
     t.timestamps(true, true);
   });
 };
