@@ -3,8 +3,8 @@ const { sendSuccess } = require('../../shared/utils/response');
 
 exports.list = async (req, res, next) => {
   try { 
-    const idtienda = req.user.idtienda;
-    const data = await service.list(idtienda);
+    const user = req.user;
+    const data = await service.list(user);
     sendSuccess(res, { data });
   } catch(err) {
     next(err);
@@ -13,9 +13,9 @@ exports.list = async (req, res, next) => {
 
 exports.get = async (req, res, next) => {
   try {
-    const idtienda = req.user.idtienda;
+    const user = req.user;
     const id = req.params.id;
-    const data = await service.get(id, idtienda);
+    const data = await service.get(id, user);
     sendSuccess(res, { data });
   } catch(err) {
     next(err);
@@ -35,10 +35,10 @@ exports.create = async (req, res, next) => {
 
 exports.update = async (req, res, next) => {
   try {
-    const idtienda = req.user.idtienda;
+    const user = req.user;
     const id = req.params.id;
     const data = req.body;
-    await service.update(id, data, idtienda);
+    await service.update(id, data, user);
     sendSuccess(res, { message: 'Producto actualizado' });
   } catch (err) {
     next(err);
@@ -47,9 +47,9 @@ exports.update = async (req, res, next) => {
 
 exports.remove = async (req, res, next) => {
   try {
-    const idtienda = req.user.idtienda;
+    const user = req.user;
     const id = req.params.id;
-    await service.remove(id, idtienda);
+    await service.remove(id, user);
     sendSuccess(res, { message: 'Estado de producto actualizado' });
   } catch (err) {
     next(err);

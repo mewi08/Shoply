@@ -2,6 +2,7 @@ const db = require('../../shared/config/db');
 const { httpError } = require('../../shared/utils/response');
 const { requireFields } = require('../../shared/utils/validators');
 const { pick } = require('../../shared/utils/sanitize');
+const { scoped } = require('../../shared/utils/permissions');
 
 const allowedFields = [
   'idtienda',
@@ -16,16 +17,15 @@ const allowedFields = [
   'cantidad_minima',
 ];
 
-exports.list = async (idtienda) => {
-  const data = await db('productos')
+exports.list = async (user) => {
+  const data = await scoped(db('productos'), user)
     .select('id', ...allowedFields)
-    .where({ idtienda, estado: true })
-    .orderBy('codigo');
+    .where({ estado: true }).orderBy('codigo');
   return data;
 };
 
-exports.get = async (id, idtienda) => {
-  const row = await db('productos').where({ id, idtienda }).first();
+exports.get = async (id, user) => {
+  const row = await scoped(db('productos'), user).where({ id }).first();
   if (!row) throw httpError(404, 'Producto no encontrado');
   return row;
 };
@@ -47,10 +47,14 @@ exports.create = async (data, idtienda) => {
   return { id };
 };
 
-exports.update = async (id, data, idtienda) => {
+exports.update = async (id, data, user) => {
   if (!data) throw httpError(400, 'Datos inválidos');
   const cleanData = pick(data, allowedFields);
-  cleanData.idtienda = idtienda;
+
+  if (user.rol !== 'superadmin') {
+    cleanData.idtienda = user.idtienda;
+  }
+
   requireFields(cleanData, [
     'idtienda',
     'idcategoria',
@@ -60,14 +64,12 @@ exports.update = async (id, data, idtienda) => {
     'precio_venta',
     'cantidad_minima',
   ]);
-  const num = await db('productos').where({ id, idtienda }).update(cleanData);
+
+  const num = await scoped(db('productos'), user).where({ id }).update(cleanData);
   if (!num) throw httpError(404, 'Producto no encontrado');
 };
 
-exports.remove = async (id, idtienda) => {
-  const num = await db('productos')
-    .where({ id, idtienda })
-    .update({ estado: db.raw('NOT estado') });
-
+exports.remove = async (id, user) => {
+  const num = await scoped(db('productos'), user).where({ id }).update({ estado: db.raw('NOT estado') });
   if (!num) throw httpError(404, 'Producto no encontrado');
 };
