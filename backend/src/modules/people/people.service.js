@@ -2,6 +2,7 @@ const db = require("../../shared/config/db");
 const { httpError } = require("../../shared/utils/response");
 const { requireFields } = require("../../shared/utils/validators");
 const { pick } = require("../../shared/utils/sanitize");
+const { scoped } = require("../../shared/utils/permissions");
 
 const allowedFields = [
   "nombres",

@@ -3,6 +3,7 @@ const controller = require('./people.controller');
 const { requireLevel } = require('../../shared/middlewares/auth');
 
 router.get('/', controller.list);
+router.get('/mis-clientes', controller.listByStore);
 router.get('/:id', controller.get);
 router.post('/', controller.create);
 router.put('/:id', controller.update);

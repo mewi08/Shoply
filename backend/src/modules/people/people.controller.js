@@ -10,6 +10,16 @@ exports.list = async (req, res, next) => {
   }
 };
 
+exports.listByStore = async (req, res, next) => {
+  try {
+    const user = req.user;
+    const data = await service.listByStore(user);
+    sendSuccess(res, { data });
+  } catch (err) {
+    next(err);
+  }
+};
+
 exports.get = async (req, res, next) => {
   try {
     const id = req.params.id;
