@@ -32,6 +32,17 @@ exports.create = async (req, res, next) => {
 
 exports.update = async (req, res, next) => {
   try {
+    const id = req.params.id;
+    const data = req.body;
+    await service.update(id, data);
+    sendSuccess(res, { message: 'Tienda actualizada' });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.updateMyStore = async (req, res, next) => {
+  try {
     const id = req.user.idtienda;
     const data = req.body;
     await service.update(id, data);
