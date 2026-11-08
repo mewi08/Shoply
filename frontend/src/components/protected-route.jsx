@@ -18,6 +18,8 @@ export default function ProtectedRoute() {
     validateSession();
   }, []);
 
+  if (authenticated === null) return;
+
   if (!authenticated) return <Navigate to="/login" replace />;
 
   return <Outlet />;
