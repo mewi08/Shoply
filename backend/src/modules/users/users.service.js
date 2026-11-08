@@ -6,6 +6,7 @@ const {
 } = require("../../shared/utils/validators");
 const { pick } = require("../../shared/utils/sanitize");
 const { hashPassword } = require("../../shared/utils/hash");
+const { scoped } = require("../../shared/utils/permissions");
 
 const publicFields = [
   "id",
@@ -22,22 +23,15 @@ const updateFields = ["username", "password", "rol"];
 
 const ROLES = ["admin", "user", "superadmin"];
 
-const isSuper = (user) => user.rol === "superadmin";
-
-const scoped = (user) => {
-  const query = db("usuarios");
-  return isSuper(user)
-    ? query
-    : query.where({ idtienda: user.idtienda }).whereNot({ rol: "superadmin" });
-};
-
 const checkRol = (rol, user) => {
-  const allowed = isSuper(user) ? ROLES : ["admin", "user"];
+  const allowed = user.rol === 'superadmin' ? ROLES : ["user"];
   if (!allowed.includes(rol)) throw httpError(400, "Rol inválido");
 };
 
 exports.list = async (user) => {
-  const data = await scoped(user).select(publicFields).orderBy("username");
+  const data = await scoped(db("usuarios"), user)
+    .select(publicFields)
+    .orderBy("username");
   return data;
 };
 
@@ -76,7 +70,7 @@ exports.update = async (id, data, user) => {
   if (!Object.keys(cleanData).length)
     throw httpError(400, "No hay datos para actualizar");
 
-  const current = await scoped(user).where({ id }).first();
+  const current = await scoped(db("usuarios"), user).first();
   if (!current) throw httpError(404, "Usuario no encontrado");
 
   checkCredentials({
@@ -92,14 +86,14 @@ exports.update = async (id, data, user) => {
 
   if (cleanData.password) cleanData.password = hashPassword(cleanData.password);
 
-  await scoped(user).where({ id }).update(cleanData);
+  await scoped(db("usuarios"), user).where({ id }).update(cleanData);
 };
 
 exports.remove = async (id, user) => {
   if (Number(id) === user.id)
     throw httpError(400, "No puedes desactivar tu propio usuario");
 
-  const num = await scoped(user)
+  const num = await scoped(db("usuarios"), user)
     .where({ id })
     .update({ estado: db.raw("NOT estado") });
   if (!num) throw httpError(404, "Usuario no encontrado");
