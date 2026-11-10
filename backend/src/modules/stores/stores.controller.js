@@ -12,6 +12,16 @@ exports.list = async (req, res, next) => {
 
 exports.get = async (req, res, next) => {
   try {
+    const id = req.params.id;
+    const data = await service.get(id);
+    sendSuccess(res, { data });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.getMyStore = async (req, res, next) => {
+  try {
     const id = req.user.idtienda;
     const data = await service.get(id);
     sendSuccess(res, { data });

@@ -4,16 +4,15 @@ const { requireFields } = require('../../shared/utils/validators');
 const { pick } = require('../../shared/utils/sanitize');
 
 const allowedFields = ['nombre', 'descripcion', 'direccion', 'telefono', 'ruc'];
+const baseQuery = () => db("tiendas").select('id', ...allowedFields, "estado");
 
 exports.list = async () => {
-  const data = await db('tiendas')
-    .select('id', 'nombre', 'direccion', 'telefono', 'estado')
-    .orderBy('nombre');
+  const data = await baseQuery().orderBy('nombre');
   return data;
 };
 
 exports.get = async (id) => {
-  const row = await db('tiendas').where({ id }).first();
+  const row = await baseQuery().where({ id }).first();
   if (!row) throw httpError(404, 'Tienda no encontrada');
   return row;
 };
