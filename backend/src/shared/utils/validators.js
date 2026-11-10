@@ -13,6 +13,9 @@ exports.isEmail = (v) =>
   v.length <= 100 &&
   /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
+exports.isTelephone = (v) =>
+  typeof v === "string" && /^\d{9}$/.test(v);
+
 exports.checkCredentials = (
   { username, password },
   { passwordRequired = false } = {},
@@ -27,4 +30,18 @@ exports.checkCredentials = (
       password.length > 72)
   )
     throw httpError(400, "La contraseña debe tener entre 8 y 72 caracteres");
+};
+
+const DOC_REGEX = {
+  DNI: /^\d{8}$/,
+  CE: /^[A-Za-z0-9]{9,12}$/,
+  RUC: /^\d{11}$/,
+};
+
+exports.checkDocument = ({ tipo_doc, num_doc } = {}) => {
+  const regex = DOC_REGEX[tipo_doc];
+  if (!regex)
+    throw httpError(400, "Tipo de documento inválido (DNI, CE o RUC)");
+  if (!regex.test(String(num_doc).trim()))
+    throw httpError(400, `Número de ${tipo_doc} inválido`);
 };
