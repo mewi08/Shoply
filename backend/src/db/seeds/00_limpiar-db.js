@@ -4,7 +4,7 @@
  */
 exports.seed = async function(knex) {
     const tablas = [
-    'detalles_venta', 'ventas', 'lotes', 'productos', 'usuarios',
+    'clientes', 'detalles_venta', 'ventas', 'lotes', 'productos', 'usuarios',
     'personas', 'categorias', 'marcas', 'unidades_medida', 'tiendas',
   ];
 
