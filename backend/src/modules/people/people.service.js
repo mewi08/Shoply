@@ -1,6 +1,6 @@
 const db = require("../../shared/config/db");
 const { httpError } = require("../../shared/utils/response");
-const { requireFields } = require("../../shared/utils/validators");
+const { requireFields, isEmail, checkDocument, isTelephone } = require("../../shared/utils/validators");
 const { pick } = require("../../shared/utils/sanitize");
 const { scoped } = require("../../shared/utils/permissions");
 
@@ -15,6 +15,23 @@ const allowedFields = [
   "tipo_doc",
   "num_doc",
 ];
+
+const validate = (p) => {
+  checkDocument(p);
+  if (p.tipo_doc === "RUC") requireFields(p, ["razon_social"]);
+  else requireFields(p, ["nombres", "ape_paterno"]);
+
+  if (p.correo && !isEmail(p.correo)) throw httpError(400, "Correo inválido");
+
+  if (p.telefono && !isTelephone(p.telefono))
+    throw httpError(400, "El teléfono debe tener 9 dígitos");
+};
+
+const clean = (data) => {
+  const out = pick(data, allowedFields);
+  for (const k in out) if (out[k] === "") out[k] = null;
+  return out;
+};
 
 exports.list = async () => {
   const data = await db('personas')
@@ -40,16 +57,16 @@ exports.get = async (id) => {
 
 exports.create = async (data) => {
     if(!data) throw httpError(400, 'Datos inválidos');
-    const cleanData = pick(data, allowedFields);
-    requireFields(cleanData, ['tipo_doc', 'num_doc']);
+    const cleanData = clean(allowedFields);
+    validate(cleanData);
     const [id] = await db('personas').insert(cleanData);
     return { id };
 };
 
 exports.update = async (id, data) => {
     if(!data) throw httpError(400, 'Datos inválidos');
-    const cleanData = pick(data, allowedFields);
-    requireFields(cleanData, ['tipo_doc', 'num_doc']);
+    const cleanData = clean(allowedFields);
+    validate(cleanData);
     const num = await db('personas').where({ id }).update(cleanData);
     if(!num) throw httpError(404, 'Persona no encontrada');
 };
