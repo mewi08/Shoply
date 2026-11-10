@@ -33,7 +33,7 @@ exports.update = async (id, data) => {
   if (!num) throw httpError(404, 'Tienda no encontrada');
 };
 
-exports.remove = async (id) => {
+exports.toggleStatus = async (id) => {
   const num = await db('tiendas')
     .where({ id })
     .update({ estado: db.raw('NOT estado') });

@@ -45,11 +45,11 @@ exports.update = async (req, res, next) => {
   }
 };
 
-exports.remove = async (req, res, next) => {
+exports.toggleStatus = async (req, res, next) => {
   try {
     const user = req.user;
     const id = req.params.id;
-    await service.remove(id, user);
+    await service.toggleStatus(id, user);
     sendSuccess(res, { message: 'Estado de producto actualizado' });
   } catch (err) {
     next(err);

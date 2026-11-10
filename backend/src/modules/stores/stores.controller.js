@@ -62,10 +62,10 @@ exports.updateMyStore = async (req, res, next) => {
   }
 };
 
-exports.remove = async (req, res, next) => {
+exports.toggleStatus = async (req, res, next) => {
   try {
     const id = req.params.id;
-    await service.remove(id);
+    await service.toggleStatus(id);
     sendSuccess(res, { message: 'Estado de tienda actualizada' });
   } catch (err) {
     next(err);

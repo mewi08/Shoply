@@ -69,7 +69,7 @@ exports.update = async (id, data, user) => {
   if (!num) throw httpError(404, 'Producto no encontrado');
 };
 
-exports.remove = async (id, user) => {
+exports.toggleStatus = async (id, user) => {
   const num = await scoped(db('productos'), user).where({ id }).update({ estado: db.raw('NOT estado') });
   if (!num) throw httpError(404, 'Producto no encontrado');
 };

@@ -8,6 +8,6 @@ router.get('/:id', requireLevel('superadmin'), controller.get);
 router.post('/', requireLevel('superadmin'), controller.create);
 router.put('/mi-tienda', requireLevel('admin'), controller.updateMyStore);
 router.put('/:id', requireLevel('superadmin'), controller.update);
-router.patch('/:id/estado', requireLevel('superadmin'), controller.remove);
+router.patch('/:id/estado', requireLevel('superadmin'), controller.toggleStatus);
 
 module.exports = router;
