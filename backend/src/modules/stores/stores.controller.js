@@ -25,53 +25,33 @@ exports.reactivate = async (req, res) => {
   sendSuccess(res, { message: 'Tienda activa' });
 };
 
-exports.list = async (req, res, next) => {
-  try {
-    const data = await service.list();
-    sendSuccess(res, { data });
-  } catch (err) {
-    next(err);
-  }
+exports.list = async (req, res) => {
+  const data = await service.list();
+  sendSuccess(res, { data });
 };
 
-exports.get = async (req, res, next) => {
-  try {
-    const id = req.params.id;
-    const data = await service.get(id);
-    sendSuccess(res, { data });
-  } catch (err) {
-    next(err);
-  }
+exports.get = async (req, res) => {
+  const id = req.params.id;
+  const data = await service.get(id);
+  sendSuccess(res, { data });
 };
 
-exports.getMyStore = async (req, res, next) => {
-  try {
-    const id = req.user.idtienda;
-    const data = await service.get(id);
-    sendSuccess(res, { data });
-  } catch (err) {
-    next(err);
-  }
+exports.getMyStore = async (req, res) => {
+  const id = req.user.idtienda;
+  const data = await service.get(id);
+  sendSuccess(res, { data });
 };
 
-exports.update = async (req, res, next) => {
-  try {
-    const id = req.params.id;
-    const data = req.body;
-    await service.update(id, data);
-    sendSuccess(res, { message: 'Tienda actualizada' });
-  } catch (err) {
-    next(err);
-  }
+exports.update = async (req, res) => {
+  const id = req.params.id;
+  const data = req.body;
+  await service.update(id, data);
+  sendSuccess(res, { message: 'Tienda actualizada' });
 };
 
-exports.updateMyStore = async (req, res, next) => {
-  try {
-    const id = req.user.idtienda;
-    const data = req.body;
-    await service.update(id, data);
-    sendSuccess(res, { message: 'Tienda actualizada' });
-  } catch (err) {
-    next(err);
-  }
+exports.updateMyStore = async (req, res) => {
+  const id = req.user.idtienda;
+  const data = req.body;
+  await service.update(id, data);
+  sendSuccess(res, { message: 'Tienda actualizada' });
 };

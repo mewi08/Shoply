@@ -8,34 +8,20 @@ const cookieOpts = {
   secure: config.environment === 'production',
 };
 
-exports.login = async (req, res, next) => {
-  try {
-    const data = req.body;
-    const token = await service.login(data);
-    
-    res.cookie('token', token, cookieOpts);
-
-    sendSuccess(res, { message: 'Sesión iniciada' });
-  } catch (err) {
-    next(err);
-  }
+exports.login = async (req, res) => {
+  const data = req.body;
+  const token = await service.login(data);
+  res.cookie('token', token, cookieOpts);
+  sendSuccess(res, { message: 'Sesión iniciada' });
 };
 
-exports.logout = async (req, res, next) => {
-  try {
-    res.clearCookie('token', cookieOpts);
-    sendSuccess(res, { message: 'Sesión finalizada' });
-  } catch (err) {
-    next(err);
-  }
+exports.logout = (req, res) => {
+  res.clearCookie('token', cookieOpts);
+  sendSuccess(res, { message: 'Sesión finalizada' });
 };
 
-exports.me = async (req, res, next) => {
-  try {
-    const id = req.user.id;
-    const user = await service.me(id);
-    sendSuccess(res, { data: user });
-  } catch (err) {
-    next(err);
-  }
+exports.me = async (req, res) => {
+  const id = req.user.id;
+  const user = await service.me(id);
+  sendSuccess(res, { data: user });
 };
