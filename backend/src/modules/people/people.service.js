@@ -40,15 +40,6 @@ exports.list = async () => {
   return data;
 };
 
-exports.listByStore = async (user) => {
-  const data = await scoped(db('ventas as v'), user)
-    .distinct('p.id', ...allowedFields.map((field) => `p.${field}`))
-    .join('personas as p', 'v.idcliente', 'p.id')
-    .orderBy('p.ape_paterno');
-
-  return data;
-};
-
 exports.get = async (id) => {
     const row = await db('personas').where({ id }).first();
     if(!row) throw httpError(404, 'Persona no encontrada');
