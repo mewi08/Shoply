@@ -10,8 +10,7 @@ exports.up = async function(knex) {
     t.string('direccion', 255).notNullable();
     t.string('telefono', 9).notNullable();
     t.string('ruc', 11).unique();
-    t.boolean('estado').notNullable().defaultTo(false);
-    t.dateTime('aprobada_at');
+    t.enu("estado", ["pendiente", "activa", "inactiva", "rechazada"]).notNullable().defaultTo("pendiente");
     t.timestamps(true, true);
   });
 };
