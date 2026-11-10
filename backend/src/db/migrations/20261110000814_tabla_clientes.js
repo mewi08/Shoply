@@ -2,8 +2,8 @@
  * @param { import("knex").Knex } knex
  * @returns { Promise<void> }
  */
-exports.up = (knex) =>
-  knex.schema.createTable("clientes", (t) => {
+exports.up = async function(knex) {
+  await knex.schema.createTable("clientes", (t) => {
     t.increments("id").primary();
     t.integer("idtienda").unsigned().notNullable().references("id").inTable("tiendas").onDelete("RESTRICT");
     t.integer("idpersona").unsigned().notNullable().references("id").inTable("personas").onDelete("RESTRICT");
@@ -12,11 +12,11 @@ exports.up = (knex) =>
 
     t.unique(["idtienda", "idpersona"]);
   });
-
+};
 /**
  * @param { import("knex").Knex } knex
  * @returns { Promise<void> }
  */
-exports.down = function (knex) {
-  knex.schema.dropTableIfExists("clientes");
+exports.down = async function (knex) {
+  await knex.schema.dropTableIfExists("clientes");
 };
