@@ -9,7 +9,7 @@ exports.up = async function(knex) {
     t.integer('idtienda').unsigned().references('id').inTable('tiendas').onDelete('RESTRICT');
     t.string('username', 50).notNullable().unique();
     t.string('password', 250).notNullable();
-    t.enu('rol', ['admin', 'user', 'superadmin']).notNullable();
+    t.enu('rol', ['admin', 'user', 'superadmin']).notNullable().defaultTo('user');
     t.dateTime('ultimo_acceso');
     t.boolean('estado').notNullable().defaultTo(true);
     t.timestamps(true, true);
