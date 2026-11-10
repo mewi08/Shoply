@@ -2,11 +2,11 @@ const service = require("./users.service");
 const { sendSuccess } = require("../../shared/utils/response");
 
 exports.list = async (req, res, next) => {
-  try { 
+  try {
     const user = req.user;
     const data = await service.list(user);
     sendSuccess(res, { data });
-  } catch(err) {
+  } catch (err) {
     next(err);
   }
 };
@@ -17,7 +17,7 @@ exports.get = async (req, res, next) => {
     const id = req.params.id;
     const data = await service.get(id, user);
     sendSuccess(res, { data });
-  } catch(err) {
+  } catch (err) {
     next(err);
   }
 };
@@ -51,6 +51,28 @@ exports.remove = async (req, res, next) => {
     const id = req.params.id;
     await service.remove(id, user);
     sendSuccess(res, { message: 'Estado actualizado' });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.updateMe = async (req, res, next) => {
+  try {
+    const user = req.user;
+    const data = req.body;
+    await service.updateMe(data, user);
+    sendSuccess(res, { message: 'Actualización exitosa' });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.changePassword = async (req, res, next) => {
+  try {
+    const user = req.user;
+    const data = req.body;
+    service.changePassword(data, user);
+    sendSuccess(res, { message: 'Contraseña actualizada' });
   } catch (err) {
     next(err);
   }
