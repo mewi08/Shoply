@@ -6,6 +6,7 @@ const { httpError } = require('../../shared/utils/response');
 const { requireFields } = require('../../shared/utils/validators');
 
 exports.login = async (data) => {
+  if (!data) throw httpError(400, 'Datos inválidos');
   requireFields(data, ['username', 'password']);
 
   const { username, password } = data;
