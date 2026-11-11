@@ -1,9 +1,28 @@
 const { config } = require('../../shared/config/env');
-const { comparePassword } = require('../../shared/utils/hash');
+const { hashPassword, comparePassword } = require('../../shared/utils/hash');
 const jwt = require('jsonwebtoken');
 const db = require('../../shared/config/db');
 const { httpError } = require('../../shared/utils/response');
-const { requireFields } = require('../../shared/utils/validators');
+const {
+  requireFields,
+  checkCredentials,
+  isTelephone,
+} = require('../../shared/utils/validators');
+const { pick } = require('../../shared/utils/sanitize');
+const personas = require('../people/people.service');
+
+const personaFields = [
+  'nombres',
+  'ape_paterno',
+  'ape_materno',
+  'razon_social',
+  'telefono',
+  'correo',
+  'direccion',
+  'tipo_doc',
+  'num_doc',
+];
+const tiendaFields = ['nombre', 'descripcion', 'direccion', 'telefono', 'ruc'];
 
 exports.login = async (data) => {
   if (!data) throw httpError(400, 'Datos inválidos');
@@ -62,4 +81,29 @@ exports.me = async (id) => {
   if(!user) throw httpError(401, 'Usuario no encontrado');
 
   return user;
+};
+
+exports.register = async (data) => {
+  if (!data) throw httpError(400, 'Datos inválidos');
+
+  const persona = pick(data.persona, personaFields);
+  const usuario = pick(data.usuario, ['username', 'password']);
+  const tienda = pick(data.tienda, tiendaFields);
+
+  personas.validate(persona);
+  checkCredentials(usuario, { passwordRequired: true });
+  requireFields(tienda, ['nombre', 'direccion', 'telefono']);
+  if (!isTelephone(tienda.telefono))
+    throw httpError(400, 'El teléfono debe tener 9 dígitos');
+
+  await db.transaction(async (trx) => {
+    const [idpersona] = await trx('personas').insert(persona);
+    const [idtienda] = await trx('tiendas').insert(tienda);
+    await trx('usuarios').insert({
+      username: usuario.username,
+      password: hashPassword(usuario.password),
+      idpersona,
+      idtienda
+    });
+  });
 };

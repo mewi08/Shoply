@@ -25,3 +25,9 @@ exports.me = async (req, res) => {
   const user = await service.me(id);
   sendSuccess(res, { data: user });
 };
+
+exports.register = async (req, res) => {
+  const data = req.body;
+  await service.register(data);
+  sendSuccess(res, { message: 'Solicitud enviada' });
+}
