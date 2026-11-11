@@ -3,24 +3,26 @@ import { Navigate, Outlet } from "react-router-dom";
 import { me } from "../modules/auth/auth.service";
 
 export default function ProtectedRoute() {
-  const [authenticated, setAuthenticated] = useState(null);
+  const [user, setUser] = useState(null);
+  const [checked, setChecked] = useState(false);
 
   useEffect(() => {
     const validateSession = async () => {
       try {
-        await me();
-        setAuthenticated(true);
+        const res = await me();
+        setUser(res.data);
       } catch (error) {
-        setAuthenticated(false);
+        setUser(null);
+      } finally {
+        setChecked(true);
       }
     };
 
     validateSession();
   }, []);
 
-  if (authenticated === null) return;
+  if (!checked) return null;
+  if (!user) return <Navigate to="/login" replace />;
 
-  if (!authenticated) return <Navigate to="/login" replace />;
-
-  return <Outlet />;
+  return <Outlet context={{ user }} />;
 }
