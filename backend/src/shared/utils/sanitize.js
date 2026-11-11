@@ -5,3 +5,8 @@ exports.pick = (body, allowedFields) => {
     )
   );
 };
+
+exports.emptyToNull = (obj) =>
+  Object.fromEntries(
+    Object.entries(obj).map(([k, v]) => [k, v === "" ? null : v]),
+);
