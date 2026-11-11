@@ -18,9 +18,10 @@ const allowedFields = [
 ];
 
 exports.list = async (user) => {
-  const data = await scoped(db('productos'), user)
-    .select('id', ...allowedFields)
-    .where({ estado: true }).orderBy('codigo');
+  const data = await scoped(db('productos as p'), user)
+    .join("tiendas as t", "t.id", "p.idtienda")
+    .select('p.id', ...allowedFields.map((f) => `p.${f}`), 't.nombre as tienda')
+    .where({ "p.estado": true }).orderBy('p.codigo');
   return data;
 };
 
