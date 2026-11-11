@@ -2,7 +2,6 @@ const db = require("../../shared/config/db");
 const { httpError } = require("../../shared/utils/response");
 const { requireFields, isEmail, checkDocument, isTelephone } = require("../../shared/utils/validators");
 const { pick } = require("../../shared/utils/sanitize");
-const { scoped } = require("../../shared/utils/permissions");
 
 const allowedFields = [
   "nombres",
@@ -66,3 +65,7 @@ exports.remove = async (id) => {
     const num = await db('personas').where({ id }).del();
     if(!num) throw httpError(404, 'Persona no encontrada');
 };
+
+module.exports = {
+  validate
+}
