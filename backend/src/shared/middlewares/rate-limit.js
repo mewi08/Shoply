@@ -15,3 +15,11 @@ exports.apiLimiter = rateLimit({
   legacyHeaders: false,
   message: { message: 'Demasiadas solicitudes, intente en un momento'}
 });
+
+exports.registerLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: 'Demasiados registros desde esta conexión, intente más tarde' },
+});
