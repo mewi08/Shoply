@@ -9,7 +9,7 @@ const {
   isTelephone,
 } = require('../../shared/utils/validators');
 const { pick } = require('../../shared/utils/sanitize');
-const personas = require('../people/people.service');
+const { checkPersona } = require('../../shared/utils/validators');
 
 const personaFields = [
   'nombres',
@@ -90,7 +90,7 @@ exports.register = async (data) => {
   const usuario = pick(data.usuario, ['username', 'password']);
   const tienda = pick(data.tienda, tiendaFields);
 
-  personas.validate(persona);
+  checkPersona(persona);
   checkCredentials(usuario, { passwordRequired: true });
   requireFields(tienda, ['nombre', 'direccion', 'telefono']);
   if (!isTelephone(tienda.telefono))

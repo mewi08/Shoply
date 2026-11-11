@@ -45,3 +45,15 @@ exports.checkDocument = ({ tipo_doc, num_doc } = {}) => {
   if (!regex.test(String(num_doc).trim()))
     throw httpError(400, `Número de ${tipo_doc} inválido`);
 };
+
+exports.checkPersona = (p = {}) => {
+  exports.checkDocument(p);
+
+  if (p.tipo_doc === "RUC") exports.requireFields(p, ["razon_social"]);
+  else exports.requireFields(p, ["nombres", "ape_paterno"]);
+
+  if (p.correo && !exports.isEmail(p.correo))
+    throw httpError(400, "Correo inválido");
+  if (p.telefono && !exports.isTelephone(p.telefono))
+    throw httpError(400, "El teléfono debe tener 9 dígitos");
+};
