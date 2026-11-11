@@ -1,6 +1,8 @@
 import { useEffect, useId, useRef, useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import { Link } from "react-router-dom";
 import { register } from "./auth.service";
+import { DOC_INFO, validateStep } from "./register.validators";
 import "./auth.css";
 
 const STEPS = ["Tus datos", "Tu acceso", "Tu tienda"];
@@ -9,51 +11,8 @@ const INITIAL = {
   tipo_doc: "DNI", num_doc: "", nombres: "", ape_paterno: "", ape_materno: "",
   razon_social: "", correo: "", telefono: "",
   username: "", password: "",
-  tienda_nombre: "", tienda_direccion: "", tienda_telefono: "",
+  tienda_nombre: "", tienda_descripcion: "", tienda_direccion: "", tienda_telefono: "",
 };
-
-const DOC_REGEX = { DNI: /^\d{8}$/, CE: /^[A-Za-z0-9]{9,12}$/, RUC: /^\d{11}$/ };
-
-const DOC_INFO = {
-  DNI: { max: 8, numeric: true, hint: "8 dígitos" },
-  CE: { max: 12, numeric: false, hint: "9 a 12 caracteres" },
-  RUC: { max: 11, numeric: true, hint: "11 dígitos" },
-};
-
-const VALIDATORS = [
-  (f) => {
-    const e = {};
-    if (!DOC_REGEX[f.tipo_doc].test(f.num_doc.trim()))
-      e.num_doc = `Número de ${f.tipo_doc} inválido`;
-    if (f.tipo_doc === "RUC") {
-      if (!f.razon_social.trim()) e.razon_social = "Escribe la razón social";
-    } else {
-      if (!f.nombres.trim()) e.nombres = "Escribe tus nombres";
-      if (!f.ape_paterno.trim()) e.ape_paterno = "Escribe tu apellido paterno";
-    }
-    if (f.correo.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.correo.trim()))
-      e.correo = "Correo inválido";
-    if (f.telefono.trim() && !/^\d{9}$/.test(f.telefono.trim()))
-      e.telefono = "El teléfono debe tener 9 dígitos";
-    return e;
-  },
-  (f) => {
-    const e = {};
-    if (!/^[a-zA-Z0-9_.-]{3,50}$/.test(f.username.trim()))
-      e.username = "3 a 50 caracteres (letras, números, _ . -)";
-    if (f.password.length < 8 || f.password.length > 72)
-      e.password = "Debe tener entre 8 y 72 caracteres";
-    return e;
-  },
-  (f) => {
-    const e = {};
-    if (!f.tienda_nombre.trim()) e.tienda_nombre = "Escribe el nombre de la tienda";
-    if (!f.tienda_direccion.trim()) e.tienda_direccion = "Escribe la dirección";
-    if (!/^\d{9}$/.test(f.tienda_telefono.trim()))
-      e.tienda_telefono = "El teléfono debe tener 9 dígitos";
-    return e;
-  },
-];
 
 function Field({ label, name, form, errors, onChange, ...props }) {
   const id = useId();
@@ -71,6 +30,41 @@ function Field({ label, name, form, errors, onChange, ...props }) {
         aria-describedby={errors[name] ? errorId : undefined}
         {...props}
       />
+      {errors[name] && <p id={errorId} className="form-error">{errors[name]}</p>}
+    </div>
+  );
+}
+
+function PasswordField({ label, name, form, errors, onChange }) {
+  const id = useId();
+  const errorId = `${id}-error`;
+  const [show, setShow] = useState(false);
+
+  return (
+    <div className="form-field">
+      <label htmlFor={id} className="form-label">{label}</label>
+      <div className="form-password">
+        <input
+          id={id}
+          name={name}
+          className="form-input"
+          type={show ? "text" : "password"}
+          autoComplete="new-password"
+          value={form[name]}
+          onChange={onChange}
+          aria-invalid={!!errors[name]}
+          aria-describedby={errors[name] ? errorId : undefined}
+        />
+        <button
+          type="button"
+          className="form-toggle"
+          aria-label="Mostrar contraseña"
+          aria-pressed={show}
+          onClick={() => setShow(!show)}
+        >
+          {show ? <EyeOff aria-hidden="true" size={20} /> : <Eye aria-hidden="true" size={20} />}
+        </button>
+      </div>
       {errors[name] && <p id={errorId} className="form-error">{errors[name]}</p>}
     </div>
   );
@@ -124,7 +118,7 @@ export default function Register() {
     e.preventDefault();
     setError("");
 
-    const found = VALIDATORS[step](form);
+    const found = validateStep(step, form);
     setErrors(found);
     const first = Object.keys(found)[0];
     if (first) {
@@ -157,6 +151,7 @@ export default function Register() {
         usuario: { username: t(form.username), password: form.password },
         tienda: {
           nombre: t(form.tienda_nombre),
+          descripcion: t(form.tienda_descripcion),
           direccion: t(form.tienda_direccion),
           telefono: t(form.tienda_telefono),
         },
@@ -245,13 +240,27 @@ export default function Register() {
           {step === 1 && (
             <>
               {field("Usuario", "username", { autoComplete: "username" })}
-              {field("Contraseña", "password", { type: "password", autoComplete: "new-password" })}
+              <PasswordField
+                label="Contraseña"
+                name="password"
+                form={form}
+                errors={errors}
+                onChange={handleChange}
+              />
+              <PasswordField
+                label="Confirmar contraseña"
+                name="confirm_password"
+                form={form}
+                errors={errors}
+                onChange={handleChange}
+              />
             </>
           )}
 
           {step === 2 && (
             <>
               {field("Nombre de la tienda", "tienda_nombre")}
+              {field("Descripción (opcional)", "tienda_descripcion", { maxLength: 200 })}
               {field("Dirección", "tienda_direccion")}
               {field("Teléfono de la tienda", "tienda_telefono", { inputMode: "numeric", maxLength: 9 })}
               <p className="auth-note">
