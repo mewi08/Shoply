@@ -1,9 +1,10 @@
 import { Alert } from "../ui/alert";
+import { Pencil, Trash2 } from "lucide-react";
 
 export function DataTable({ table, actions, state }) {
   const { columns, rows, label, getRowName, editingId } = table;
 
-  const { onEdit, onDelete } = actions;
+  const { onEdit, onDelete, renderActions } = actions;
 
   const { loading = false, error = "" } = state;
 
@@ -16,7 +17,7 @@ export function DataTable({ table, actions, state }) {
   if (error) return <Alert type="error">{error}</Alert>;
   if (rows.length === 0) return <p className="crud-empty">No hay registros.</p>;
 
-  const hasActions = Boolean(onEdit || onDelete);
+  const hasActions = Boolean(onEdit || onDelete || renderActions);
   const nameOf = (row) => (getRowName ? ` ${getRowName(row)}` : "");
 
   return (
@@ -50,30 +51,31 @@ export function DataTable({ table, actions, state }) {
                   {col.render ? col.render(row) : row[col.key]}{" "}
                 </td>
               ))}
-              {hasActions && (
-                <td className="crud-actions">
-                  {onEdit && (
-                    <button
-                      type="button"
-                      className="btn btn-secondary"
-                      aria-label={`Editar${nameOf(row)}`}
-                      onClick={() => onEdit(row)}
-                    >
-                      
-                    </button>
-                  )}
-                  {onDelete && (
-                    <button
-                      type="button"
-                      className="btn btn-danger"
-                      aria-label={`Eliminar${nameOf(row)}`}
-                      onClick={() => onDelete(row)}
-                    >
-                      
-                    </button>
-                  )}
-                </td>
-              )}
+              <td className="crud-actions">
+                {renderActions?.(row)}
+                {onEdit && (
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    aria-label={`Editar${nameOf(row)}`}
+                    onClick={() => onEdit(row)}
+                  >
+                    <Pencil aria-hidden="true" size={13} />
+                    Editar
+                  </button>
+                )}
+                {onDelete && (
+                  <button
+                    type="button"
+                    className="btn btn-danger"
+                    aria-label={`Eliminar${nameOf(row)}`}
+                    onClick={() => onDelete(row)}
+                  >
+                    <Trash2 aria-hidden="true" size={13} />
+                    Eliminar
+                  </button>
+                )}
+              </td>
             </tr>
           ))}
         </tbody>

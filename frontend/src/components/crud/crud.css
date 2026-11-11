@@ -382,6 +382,63 @@
   margin-left: 0.5rem;
 }
 
+/* ---------- Pestañas de filtro ---------- */
+
+.crud-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.crud-tab {
+  min-height: 2.75rem;
+  padding: 0.25rem 1rem;
+  font: inherit;
+  font-weight: 600;
+  color: var(--tinta-suave);
+  cursor: pointer;
+  background: var(--papel);
+  border: 2px solid var(--borde);
+  border-radius: 999px;
+}
+
+.crud-tab:hover {
+  background: var(--verde-suave);
+}
+
+.crud-tab[aria-selected="true"] {
+  color: var(--verde-caja);
+  background: var(--verde-suave);
+  border-color: var(--verde-caja);
+}
+.crud-tab[aria-pressed="true"] {
+  color: var(--verde-caja);
+  background: var(--verde-suave);
+  border-color: var(--verde-caja);
+}
+
+/* ---------- Etiqueta de estado ---------- */
+
+.status-tag {
+  display: inline-block;
+  padding: 0.125rem 0.625rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  white-space: nowrap;
+  border-radius: 999px;
+}
+
+.status-tag.is-active {
+  color: var(--verde-caja);
+  background: var(--verde-suave);
+}
+
+.status-tag.is-pending {
+  color: #8a5a00;
+  background: #fff3d6;
+}
+
 /* ---------- Alertas ---------- */
 
 .alert-error {
