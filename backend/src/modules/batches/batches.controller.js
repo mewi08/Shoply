@@ -15,9 +15,9 @@ exports.get = async (req, res) => {
 };
 
 exports.create = async (req, res) => {
-  const idtienda = req.user.idtienda;
+  const user = req.user;
   const data = req.body;
-  const id = await service.create(data, idtienda);
+  const id = await service.create(data, user);
   sendSuccess(res, { data: id }, 201);
 };
 

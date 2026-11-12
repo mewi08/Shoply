@@ -2,15 +2,15 @@ const service = require('./products.service');
 const { sendSuccess } = require('../../shared/utils/response');
 
 exports.list = async (req, res) => {
-  const user = req.user;
-  const data = await service.list(user);
+  const idtienda = req.user.idtienda;
+  const data = await service.list(idtienda);
   sendSuccess(res, { data });
 };
 
 exports.get = async (req, res) => {
-  const user = req.user;
+  const idtienda = req.user.idtienda;
   const id = req.params.id;
-  const data = await service.get(id, user);
+  const data = await service.get(id, idtienda);
   sendSuccess(res, { data });
 };
 
@@ -22,16 +22,16 @@ exports.create = async (req, res) => {
 };
 
 exports.update = async (req, res) => {
-  const user = req.user;
+  const idtienda = req.user.idtienda;
   const id = req.params.id;
   const data = req.body;
-  await service.update(id, data, user);
+  await service.update(id, data, idtienda);
   sendSuccess(res, { message: 'Producto actualizado' });
 };
 
 exports.toggleStatus = async (req, res) => {
-  const user = req.user;
+  const idtienda = req.user.idtienda;
   const id = req.params.id;
-  await service.toggleStatus(id, user);
+  await service.toggleStatus(id, idtienda);
   sendSuccess(res, { message: 'Estado de producto actualizado' });
 };
