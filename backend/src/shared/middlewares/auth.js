@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const db = require('../config/db');
-const { sendError, sendSuccess } = require('../utils/response');
+const { sendError } = require('../utils/response');
+const { storeBlock } = require('../utils/store-status');
 const { config } = require('../config/env');
 
 const unauthorized = (res, msg = 'No autorizado') => {
@@ -12,19 +13,25 @@ exports.verifyToken = async (req, res, next) => {
 
   if (!token) return unauthorized(res);
 
-  let pyload;
-
+  let payload;
   try {
-    pyload = jwt.verify(token, config.jwt.secret, { algorithms: ['HS256'] });
-  } catch (error) {
+    payload = jwt.verify(token, config.jwt.secret, { algorithms: ['HS256'] });
+  } catch {
     return unauthorized(res, 'Sesión inválida o expirada');
   }
 
-  const user = await db('usuarios').where({ id: pyload.id })
-    .select('id', 'username', 'rol', 'estado', 'idtienda').first();
+  const row = await db('usuarios as u')
+    .leftJoin('tiendas as t', 'u.idtienda', 't.id')
+    .where('u.id', payload.id)
+    .first('u.id', 'u.username', 'u.rol', 'u.estado', 'u.idtienda', 't.estado as tienda_estado');
 
-  if (!user || !user.estado)
+  if (!row || !row.estado)
     return unauthorized(res, 'Usuario inactivo o inexistente');
+
+  const { tienda_estado, ...user } = row;
+
+  const blocked = storeBlock(user.rol, tienda_estado);
+  if (blocked) return sendError(res, blocked, 403);
 
   req.user = user;
 

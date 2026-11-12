@@ -10,6 +10,7 @@ const {
 } = require('../../shared/utils/validators');
 const { pick } = require('../../shared/utils/sanitize');
 const { checkPersona } = require('../../shared/utils/validators');
+const { storeBlock } = require('../../shared/utils/store-status');
 
 const personaFields = [
   'nombres',
@@ -34,7 +35,10 @@ exports.login = async (data) => {
     throw httpError(400, 'Datos inválidos');
   }
 
-  const user = await db('usuarios').where({ username }).first();
+  const user = await db('usuarios as u')
+    .leftJoin('tiendas as t', 'u.idtienda', 't.id')
+    .where('u.username', username)
+    .first('u.*', 't.estado as tienda_estado');
 
   if (!user || !user.estado) {
     throw httpError(401, 'Usuario o contraseña incorrecto');
@@ -45,6 +49,9 @@ exports.login = async (data) => {
   if (!valid) {
     throw httpError(401, 'Usuario o contraseña incorrecto');
   }
+
+  const blocked = storeBlock(user.rol, user.tienda_estado);
+  if (blocked) throw httpError(403, blocked);
 
   const token = jwt.sign(
     {
