@@ -1,40 +1,40 @@
 import { useId, useState } from "react";
 import { Search } from "lucide-react";
 
-export function SearchBar({ config, actions }) {
-  const { label, placeholder } = config;
-  const { onSearch } = actions;
-  const inputId = useId();
-  const [value, setValue] = useState("");
+export function SearchBar(props) {
+  const { etiqueta, placeholder, alBuscar } = props;
 
-  const handleSubmit = (e) => {
+  const idInput = useId();
+  const [texto, setTexto] = useState("");
+
+  const manejarEnvio = (e) => {
     e.preventDefault();
-    onSearch(value.trim());
+    alBuscar(texto.trim());
   };
 
-  const handleChange = (e) => {
-    setValue(e.target.value);
-    if (e.target.value === "") onSearch("");
+  const manejarCambio = (e) => {
+    const nuevoTexto = e.target.value;
+    setTexto(nuevoTexto);
+    if (!nuevoTexto) alBuscar("");
   };
 
   return (
-    <form className="searchbar" role="search" onSubmit={handleSubmit}>
-      <label htmlFor={inputId} className="form-label">
-        {label}
-      </label>
+    <form className="searchbar" role="search" onSubmit={manejarEnvio}>
+      <label htmlFor={idInput} className="form-label">{etiqueta}</label>
+
       <div className="searchbar-row">
         <div className="searchbar-field">
-          <Search aria-hidden="true" size={20} className="searchbar-icon" />
+          <Search size={20} className="searchbar-icon" />
           <input
-            id={inputId}
+            id={idInput}
             className="form-input searchbar-input"
             type="search"
             placeholder={placeholder}
-            autoComplete="off"
-            value={value}
-            onChange={handleChange}
+            value={texto}
+            onChange={manejarCambio}
           />
         </div>
+
         <button type="submit" className="btn btn-secondary">
           Buscar
         </button>

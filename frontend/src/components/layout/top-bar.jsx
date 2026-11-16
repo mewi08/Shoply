@@ -1,34 +1,24 @@
 import { ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 
-export function TopBar({ config, children }) {
-  const { trail = [], greeting } = config;
+export function TopBar(props) {
+  const { trail=[] } = props;
+
   return (
     <header className="topbar">
-      <nav aria-label="Ruta de navegación">
+      <nav>
         <ol className="topbar-trail">
-          {trail.map((step, i) => {
-            const isLast = i === trail.length - 1;
-            return (
-              <li key={step.label} className="topbar-step">
-                {isLast || !step.to ? (
-                  <span aria-current={isLast ? "page" : undefined}>
-                    {step.label}
-                  </span>
-                ) : (
-                  <Link to={step.to}>{step.label}</Link>
-                )}
-                {!isLast && <ChevronRight aria-hidden="true" size={16} />}
-              </li>
-            );
-          })}
+          {trail.map((step) => (
+            <li key={step.label} className="topbar-step">
+              {step.to 
+              ? ( <Link to={step.to}>{step.label}</Link> ) 
+              : ( <span >{step.label}</span> )
+              }
+              {step.to && <ChevronRight size={16} />}
+            </li>
+          ))}
         </ol>
       </nav>
-
-      <div className="topbar-side">
-        {greeting && <p className="topbar-greeting">{greeting}</p>}
-        {children}
-      </div>
     </header>
   );
 }

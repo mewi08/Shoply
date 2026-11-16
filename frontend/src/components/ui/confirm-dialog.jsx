@@ -1,46 +1,81 @@
-import { Alert } from "./alert";
-import { Dialog } from "../crud/dialog";
+import { useId, useLayoutEffect, useRef } from "react";
+import { X } from "lucide-react";
+import { Alert } from "../ui/alert";
 
-export function ConfirmDialog({ config, actions, state, children }) {
+const CLASE_BOTON = {
+  peligro: "btn btn-danger",
+  normal: "btn btn-primary",
+};
+
+export function ConfirmDialog(props) {
   const {
-    title,
-    confirmLabel = "Eliminar",
-    busyLabel = "Eliminando…",
-    ConfirmIcon,
-  } = config;
+    abierto,
+    titulo,
+    textoConfirmar = "Confirmar",
+    textoCargando = "Procesando…",
+    tipo = "normal",
+    IconoConfirmar,
+    cargando = false,
+    error = "",
+    alConfirmar,
+    alCancelar,
+    children,
+  } = props;
 
-  const { onConfirm, onCancel, onClosed } = actions;
+  const referenciaDialogo = useRef(null);
+  const idTitulo = useId();
 
-  const { open, loading = false, error = "" } = state;
+  useLayoutEffect(() => {
+    const dialogo = referenciaDialogo.current;
+    if (!dialogo) return;
+
+    if (abierto && !dialogo.open) {
+      dialogo.showModal();
+      dialogo.querySelector("[data-autofocus]")?.focus();
+    }
+
+    if (!abierto && dialogo.open) dialogo.close();
+  }, [abierto]);
+
   return (
-    <Dialog
-      open={open}
-      config={{ title }}
-      events={{ onClose: onCancel, onClosed }}
+    <dialog
+      ref={referenciaDialogo}
+      className="crud-dialog"
     >
+      <button
+        type="button"
+        className="crud-dialog-close"
+        onClick={alCancelar}
+      >
+        <X size={22} />
+      </button>
+
+      <h2 id={idTitulo} className="crud-dialog-title">{titulo}</h2>
+
       {children}
 
-      <Alert type="error">{error}</Alert>
+      {error && <Alert type="error">{error}</Alert>}
 
       <div className="crud-dialog-actions">
         <button
           type="button"
           className="btn btn-secondary"
           data-autofocus
-          onClick={onCancel}
+          onClick={alCancelar}
         >
           Cancelar
         </button>
+
         <button
           type="button"
-          className="btn btn-danger"
-          onClick={onConfirm}
-          disabled={loading}
+          className={CLASE_BOTON[tipo]}
+          onClick={alConfirmar}
+          disabled={cargando}
         >
-          {ConfirmIcon && <ConfirmIcon aria-hidden="true" size={20} />}
-          {loading ? busyLabel : confirmLabel}
+          {IconoConfirmar && <IconoConfirmar size={20} />}
+          {cargando ? textoCargando : textoConfirmar}
         </button>
       </div>
-    </Dialog>
+    </dialog>
   );
 }

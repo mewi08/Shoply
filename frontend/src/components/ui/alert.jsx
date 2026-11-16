@@ -1,9 +1,8 @@
-export function Alert({ type = "info", id, children }) {
-  if (type === "error" && !children) return null;
+export function Alert(props) {
+  const { type = "info", children } = props;
 
   return (
     <p
-      id={id}
       role={type === "error" ? "alert" : "status"}
       className={`alert alert-${type}`}
     >
