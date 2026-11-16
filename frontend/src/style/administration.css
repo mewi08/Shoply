@@ -1,0 +1,39 @@
+.admin-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+.admin-grid .crud-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  margin-bottom: 0;
+}
+
+.admin-grid .crud-card-head {
+  flex: 1;
+}
+
+.admin-grid .btn {
+  width: 100%;
+  min-height: 2.75rem;
+  text-decoration: none;
+}
+
+@media (min-width: 40rem) {
+  .admin-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .admin-grid .btn {
+    width: auto;
+    align-self: flex-start;
+  }
+}
+
+@media (min-width: 64rem) {
+  .admin-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

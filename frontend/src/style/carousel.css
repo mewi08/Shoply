@@ -1,0 +1,66 @@
+/* Carrusel: de una en una en celular */
+
+.carousel-list {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.carousel-item:not(.is-active) {
+  display: none;
+}
+
+.carousel-nav {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.carousel-arrow {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  color: var(--tinta);
+  cursor: pointer;
+  background: var(--papel);
+  border: 2px solid var(--borde);
+  border-radius: 50%;
+}
+
+.carousel-arrow[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.carousel-count {
+  min-width: 4rem;
+  margin: 0;
+  font-weight: 600;
+  text-align: center;
+}
+
+@media (min-width: 40rem) {
+  .carousel-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+
+  .carousel-item:not(.is-active) {
+    display: block;
+  }
+
+  .carousel-nav {
+    display: none;
+  }
+}
+
+@media (min-width: 64rem) {
+  .carousel-list {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

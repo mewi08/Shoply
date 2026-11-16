@@ -1,0 +1,37 @@
+/* Tabla (para listados con muchas columnas) */
+
+.crud-table-wrap {
+  overflow-x: auto;
+}
+
+.crud-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.crud-table th,
+.crud-table td {
+  padding: 0.75rem 0.5rem;
+  text-align: left;
+  border-bottom: 1px solid var(--linea);
+}
+
+.crud-table th {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--tinta-suave);
+}
+
+.crud-table .is-editing {
+  background: var(--verde-suave);
+}
+
+.crud-table .crud-actions {
+  text-align: right;
+}
+
+.crud-actions .btn {
+  min-height: 2.75rem;
+  padding: 0.25rem 0.875rem;
+  margin-left: 0.5rem;
+}

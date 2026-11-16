@@ -1,0 +1,44 @@
+/* Botones */
+
+.btn {
+  gap: 0.5rem;
+}
+
+.btn-block {
+  width: 100%;
+}
+
+.btn-secondary {
+  color: var(--tinta);
+  background: var(--papel);
+  border-color: var(--borde);
+}
+
+.btn-secondary:hover {
+  background: var(--verde-suave);
+}
+
+.btn-danger {
+  color: var(--papel);
+  background: var(--error-borde);
+}
+
+.btn-danger:hover {
+  background: var(--error);
+}
+
+.btn-danger-soft {
+  color: var(--error);
+  background: var(--error-fondo);
+  border-color: #f0b7b3;
+}
+
+.btn-danger-soft:hover {
+  background: #fbd9d5;
+}
+
+@media (min-width: 40rem) {
+  .btn-block {
+    width: auto;
+  }
+}

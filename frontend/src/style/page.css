@@ -1,0 +1,77 @@
+/* Estructura de la página */
+
+.crud-shell {
+  min-height: 100dvh;
+  background: #f5f8f6;
+}
+
+.crud-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  white-space: nowrap;
+  border: 0;
+  clip: rect(0 0 0 0);
+}
+
+.crud-page {
+  max-width: 64rem;
+  padding: 1.5rem 1rem 3rem;
+  margin: 0 auto;
+}
+
+.crud-header {
+  margin-bottom: 1.25rem;
+}
+
+.crud-title {
+  margin: 0;
+  font-family: var(--fuente-titulo);
+  font-size: 2.25rem;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.crud-subtitle {
+  margin: 0.5rem 0 0;
+  font-size: 1.125rem;
+  color: var(--tinta-suave);
+}
+
+.crud-action {
+  margin-bottom: 1.5rem;
+}
+
+.crud-badge {
+  flex-shrink: 0;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--verde-caja);
+  white-space: nowrap;
+  background: var(--verde-suave);
+  border-radius: 999px;
+}
+
+.crud-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.crud-empty {
+  margin: 0;
+  color: var(--tinta-suave);
+}
+
+@media (min-width: 40rem) {
+  .crud-page {
+    padding-top: 2.5rem;
+  }
+}

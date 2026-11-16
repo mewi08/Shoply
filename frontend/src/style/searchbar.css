@@ -1,0 +1,45 @@
+/* Búsqueda */
+
+.searchbar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.searchbar-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.searchbar-field {
+  position: relative;
+}
+
+.searchbar-icon {
+  position: absolute;
+  top: 50%;
+  left: 0.875rem;
+  color: var(--tinta-suave);
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+.searchbar .searchbar-input {
+  padding-left: 2.75rem;
+}
+
+.searchbar-input::placeholder {
+  color: var(--tinta-suave);
+}
+
+@media (min-width: 40rem) {
+  .searchbar-row {
+    flex-direction: row;
+  }
+
+  .searchbar-field {
+    flex: 1;
+  }
+}
