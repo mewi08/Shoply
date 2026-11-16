@@ -1,102 +1,102 @@
 import { useId, useRef, useState } from "react";
 import { Alert } from "../../../components/ui/alert";
 
-export default function UnitForm({ unit, onSave, onCancel }) {
-  const errorId = useId();
-  const nombreRef = useRef(null);
+const FIELDS = [
+  { name: "nombre", label: "Nombre", type: "text", maxLength: 20, required: true, autoFocus: true },
+  { name: "abreviatura", label: "Abreviatura", type: "text", maxLength: 5 },
+];
 
-  const [inputNombre, setNombre] = useState(unit?.nombre ?? "");
-  const [inputAbreviatura, setAbreviatura] = useState(unit?.abreviatura ?? "");
+const toForm = (unit) =>
+  Object.fromEntries(
+    FIELDS.map((f) => [
+      f.name,
+      unit?.[f.name] != null ? String(unit[f.name]) : "",
+    ]),
+  );
 
+const toPayload = (form) => ({
+  nombre: form.nombre.trim(),
+  abreviatura: form.abreviatura.trim() || null,
+});
+
+function Field(props) {
+  const { id, field, value, onChange } = props;
+
+  return (
+    <div className="form-field">
+      <label htmlFor={id} className="form-label">
+        {field.label}
+      </label>
+      <input
+        id={id}
+        className="form-input"
+        type={field.type}
+        maxLength={field.maxLength}
+        autoComplete="off"
+        data-autofocus={field.autoFocus}
+        value={value}
+        onChange={onChange}
+      />
+    </div>
+  );
+}
+
+export default function UnitForm(props) {
+  const { unit, onSave, onCancel } = props;
+
+  const inputId = useId();
+  const formRef = useRef(null);
+
+  const [form, setForm] = useState(() => toForm(unit));
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+
+  const focusFirst = () =>
+    formRef.current?.querySelector("[data-autofocus]")?.focus();
+
+  const handleChange = (name) => (e) =>
+    setForm((f) => ({ ...f, [name]: e.target.value }));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const nombre = inputNombre.trim();
-    const abreviatura = inputAbreviatura.trim();
-
-    if (!nombre) {
+    if (!form.nombre.trim()) {
       setError("Escribe el nombre de la unidad de medida");
-      nombreRef.current?.focus();
+      focusFirst();
       return;
     }
-
-    const data = { nombre, abreviatura };
 
     setSaving(true);
     setError("");
 
     try {
-      await onSave(unit?.id, data);
+      await onSave(unit?.id, toPayload(form));
     } catch (err) {
       setError(err.message);
       setSaving(false);
-      nombreRef.current?.focus();
+      focusFirst();
     }
   };
 
   return (
-    <form className="crud-form" onSubmit={handleSubmit} noValidate>
-      <div className="form-field">
-        <label htmlFor="unit-name" className="form-label">
-          Nombre
-        </label>
-
-        <input
-          id="unit-name"
-          ref={nombreRef}
-          className="form-input"
-          type="text"
-          maxLength={20}
-          autoComplete="off"
-          data-autofocus
-          value={inputNombre}
-          onChange={(e) => setNombre(e.target.value)}
-          aria-invalid={!!error}
-          aria-describedby={error ? errorId : undefined}
+    <form ref={formRef} className="crud-form" onSubmit={handleSubmit} noValidate>
+      {FIELDS.map((field) => (
+        <Field
+          key={field.name}
+          id={`${inputId}-${field.name}`}
+          field={field}
+          value={form[field.name]}
+          onChange={handleChange(field.name)}
         />
+      ))}
 
-        <Alert type="error" id={errorId}>
-          {error}
-        </Alert>
-      </div>
-
-      <div className="form-field">
-        <label htmlFor="unit-abbreviation" className="form-label">
-          Abreviatura
-        </label>
-
-        <input
-          id="unit-abbreviation"
-          className="form-input"
-          type="text"
-          maxLength={5}
-          autoComplete="off"
-          value={inputAbreviatura}
-          onChange={(e) => setAbreviatura(e.target.value)}
-        />
-      </div>
+      {error && <Alert type="error">{error}</Alert>}
 
       <div className="crud-dialog-actions">
-        <button
-          type="submit"
-          className="btn btn-primary"
-          disabled={saving}
-        >
-          {saving
-            ? "Guardando…"
-            : unit
-              ? "Guardar cambios"
-              : "Crear unidad"}
+        <button type="submit" className="btn btn-primary" disabled={saving}>
+          {saving ? "Guardando…" : "Guardar"}
         </button>
-
-        <button
-          type="button"
-          className="btn btn-secondary"
-          onClick={onCancel}
-        >
+        <button type="button" className="btn btn-secondary" onClick={onCancel}>
           Cancelar
         </button>
       </div>

@@ -2,12 +2,11 @@ import { useRef, useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import {
   Alert,
-  CardCarousel,
   ConfirmDialog,
   CrudCard,
   CrudPage,
+  DataTable,
   Dialog,
-  ItemCard,
   SearchBar,
 } from "../../../components/crud";
 import UnitForm from "./unit-form";
@@ -15,8 +14,15 @@ import { useUnits } from "./use-unit";
 
 const trail = [
   { label: "Menú", to: "/" },
-  { label: "Unidades de medida" },
+  { label: "Administración", to: "/administracion"},
+  { label: "Unidades de medida" }
 ];
+
+const COLUMNS = [
+  { key: "nombre", header: "Nombre" },
+  { key: "abreviatura", header: "Abreviatura"}
+];
+const PAGE_SIZE = 5;
 
 const normalize = (text) =>
   text
@@ -24,21 +30,13 @@ const normalize = (text) =>
     .replace(/\p{Diacritic}/gu, "")
     .toLowerCase();
 
-const countLabel = (n) =>
-  `${n} ${n === 1 ? "unidad" : "unidades"}`;
+const countLabel = (n) => `${n} ${n === 1 ? "Unidad" : "Unidades"}`;
 
 export default function Units() {
   const titleRef = useRef(null);
-  const focusTitleOnClose = useRef(false);
 
-  const {
-    units,
-    loading,
-    loadError,
-    getUnit,
-    saveUnit,
-    removeUnit,
-  } = useUnits();
+  const { units, loading, loadError, getUnit, saveUnit, removeUnit, } = 
+    useUnits();
 
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("");
@@ -52,6 +50,8 @@ export default function Units() {
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
 
+  const [page, setPage] = useState(1);
+
   const filterBy = (text) =>
     units.filter((unit) =>
       normalize(unit.nombre).includes(normalize(text))
@@ -59,16 +59,13 @@ export default function Units() {
 
   const visible = filterBy(query);
 
+  const totalPages = Math.ceil(visible.length / PAGE_SIZE );
+  const index = (page - 1) * PAGE_SIZE ;
+  const paginatedItems  = visible.slice(index, index + PAGE_SIZE );
+
   const handleSearch = (text) => {
     setQuery(text);
-
-    const n = filterBy(text).length;
-
-    setStatus(
-      text
-        ? `${countLabel(n)} ${n === 1 ? "encontrada" : "encontradas"} para «${text}»`
-        : ""
-    );
+    setPage(1);
   };
 
   const openCreate = () => {
@@ -80,7 +77,6 @@ export default function Units() {
 
   const openEdit = async (unit) => {
     if (loadingEdit) return;
-
     setStatus("");
     setActionError("");
     setLoadingEdit(true);
@@ -97,11 +93,7 @@ export default function Units() {
 
   const handleSave = async (id, data) => {
     await saveUnit(id, data);
-
-    setStatus(
-      `Unidad «${data.nombre}» ${id ? "actualizada" : "creada"}`
-    );
-
+    setStatus(`Unidad «${data.nombre}» ${id ? "actualizada" : "creada"}`);
     setFormOpen(false);
   };
 
@@ -116,9 +108,7 @@ export default function Units() {
 
     try {
       await removeUnit(toDelete.id);
-
       setStatus(`Unidad «${toDelete.nombre}» eliminada`);
-      focusTitleOnClose.current = true;
       setToDelete(null);
     } catch (err) {
       setDeleteError(err.message);
@@ -127,85 +117,56 @@ export default function Units() {
     }
   };
 
-  const handleDeleteClosed = () => {
-    if (!focusTitleOnClose.current) return;
-
-    focusTitleOnClose.current = false;
-    titleRef.current?.focus();
-  };
-
   return (
     <CrudPage
-      config={{
-        title: "Unidades de medida",
-        subtitle: "Administra las unidades de medida de los productos de tu tienda.",
-      }}
-      navigation={{ trail }}
-      feedback={{ status }}
-      refs={{ titleRef }}
-      action={
+      titulo= "Unidades de medida"
+      subtitulo= "Administra las unidades de medida de los productos de tu tienda."
+      
+      ruta={trail}
+      estado={status}
+      refTitulo={titleRef}
+      accion={
         <button
           type="button"
           className="btn btn-primary btn-block"
           onClick={openCreate}
         >
-          <Plus aria-hidden="true" size={20} />
+          <Plus size={20} />
           Crear unidad
         </button>
       }
     >
-      <Alert type="error">{actionError}</Alert>
+      {actionError && <Alert type="error">{actionError}</Alert>}
 
       <SearchBar
-        config={{
-          label: "Buscar una unidad",
-          placeholder: "Nombre de la unidad",
-        }}
-        actions={{
-          onSearch: handleSearch,
-        }}
+        etiqueta="Buscar una unidad"
+        placeholder="Nombre de la unidad"
+        alBuscar={handleSearch}
       />
 
       <CrudCard
-        config={{
-          title: "Unidades de medida de tu tienda",
-          subtitle: "Ordenadas de la A a la Z",
-          badge: loading || loadError ? undefined : countLabel(visible.length),
-        }}
+        titulo="Unidades de medida de tu tienda"
+        subtitulo="Ordenadas de la A a la Z"
+        insignia={loading || loadError ? undefined : countLabel(visible.length)}
+        pagina={page}
+        totalPaginas={totalPages}
+        alCambiarPagina={setPage}
       >
-        <CardCarousel
-          config={{
-            label: "Unidades de medida",
-          }}
-          state={{
-            loading,
-            error: loadError,
-          }}
-        >
-          {visible.map((unit) => (
-            <ItemCard
-              key={unit.id}
-              config={{
-                title: unit.nombre,
-                description: unit.abreviatura || "Sin abreviatura",
-              }}
-              actions={{
-                onEdit: () => openEdit(unit),
-                onDelete: () => askDelete(unit),
-              }}
-            />
-          ))}
-        </CardCarousel>
+        <DataTable
+          columnas={COLUMNS}
+          filas={paginatedItems}
+          cargando={loading}
+          error={loadError}
+          idEnEdicion={editing?.id}
+          alEditar={openEdit}
+          alEliminar={askDelete}
+        />
       </CrudCard>
 
       <Dialog
-        open={formOpen}
-        config={{
-          title: editing ? "Editar unidad" : "Crear unidad",
-        }}
-        events={{
-          onClose: () => setFormOpen(false),
-        }}
+        abierto={formOpen}
+        titulo={editing ? "Editar unidad" : "Crear unidad"}
+        alCerrar={() => setFormOpen(false)}
       >
         {formOpen && (
           <UnitForm
@@ -217,24 +178,19 @@ export default function Units() {
       </Dialog>
 
       <ConfirmDialog
-        config={{
-          title: `¿Eliminar la unidad ${toDelete?.nombre ?? ""}?`,
-          ConfirmIcon: Trash2,
-          confirmLabel: "Eliminar unidad",
-        }}
-        actions={{
-          onConfirm: confirmDelete,
-          onCancel: () => setToDelete(null),
-          onClosed: handleDeleteClosed,
-        }}
-        state={{
-          open: toDelete !== null,
-          loading: deleting,
-          error: deleteError,
-        }}
+        abierto={toDelete !== null}
+        titulo="¿Eliminar esta unidad?"
+        textoConfirmar="Eliminar unidad"
+        textoCargando="Eliminando…"
+        tipo="peligro"
+        IconoConfirmar={Trash2}
+        cargando={deleting}
+        error={deleteError}
+        alConfirmar={confirmDelete}
+        alCancelar={() => setToDelete(null)}
       >
         <p>
-          Esta unidad de medida se quitará de tu tienda. No podrás deshacer
+          Esta unidad de medida «{toDelete?.nombre}»se quitará de tu tienda. No podrás deshacer
           esta acción.
         </p>
       </ConfirmDialog>

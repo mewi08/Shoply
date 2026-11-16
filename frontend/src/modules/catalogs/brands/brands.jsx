@@ -2,18 +2,24 @@ import { useRef, useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import {
   Alert,
-  CardCarousel,
   ConfirmDialog,
   CrudCard,
   CrudPage,
+  DataTable,
   Dialog,
-  ItemCard,
   SearchBar,
 } from "../../../components/crud";
 import BrandForm from "./brand-form";
 import { useBrands } from "./use-brands";
 
-const trail = [{ label: "Menú", to: "/" }, { label: "Marcas" }];
+const trail = [
+  { label: "Menú", to: "/" },
+  { label: "Administración", to: "/administracion" },
+  { label: "Marcas" }
+];
+
+const COLUMNS = [{ key: "nombre", header: "Nombre" }];
+const PAGE_SIZE = 5;
 
 const normalize = (text) =>
   text
@@ -21,11 +27,10 @@ const normalize = (text) =>
     .replace(/\p{Diacritic}/gu, "")
     .toLowerCase();
 
-const countLabel = (n) => `${n} ${n === 1 ? "marca" : "marcas"}`;
+const countLabel = (n) => `${n} ${n === 1 ? "Marca" : "Marcas"}`;
 
 export default function Brands() {
   const titleRef = useRef(null);
-  const focusTitleOnClose = useRef(false);
   const { brands, loading, loadError, getBrand, saveBrand, removeBrand } =
     useBrands();
 
@@ -41,18 +46,21 @@ export default function Brands() {
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
 
+  const [page, setPage] = useState(1);
+
+
   const filterBy = (text) =>
     brands.filter((b) => normalize(b.nombre).includes(normalize(text)));
+
   const visible = filterBy(query);
 
-  const handleSearch = (text) => {
-    setQuery(text);
-    const n = filterBy(text).length;
-    setStatus(
-      text
-        ? `${countLabel(n)} ${n === 1 ? "encontrada" : "encontradas"} para «${text}»`
-        : "",
-    );
+  const totalPages = Math.ceil(visible.length / PAGE_SIZE );
+  const index = (page - 1) * PAGE_SIZE ;
+  const paginatedItems  = visible.slice(index, index + PAGE_SIZE );
+
+  const handleSearch = (texto) => {
+    setQuery(texto);
+    setPage(1);
   };
 
   const openCreate = () => {
@@ -96,7 +104,6 @@ export default function Brands() {
     try {
       await removeBrand(toDelete.id);
       setStatus(`Marca «${toDelete.nombre}» eliminada`);
-      focusTitleOnClose.current = true;
       setToDelete(null);
     } catch (err) {
       setDeleteError(err.message);
@@ -105,111 +112,74 @@ export default function Brands() {
     }
   };
 
-  const handleDeleteClosed = () => {
-    if (!focusTitleOnClose.current) return;
-    focusTitleOnClose.current = false;
-    titleRef.current?.focus();
-  };
-
   return (
     <CrudPage
-      config={{
-        title: "Marcas",
-        subtitle: "Organiza las marcas de los productos de tu tienda.",
-      }}
-      navigation={{ trail }}
-      feedback={{ status }}
-      refs={{ titleRef }}
-      action={
-        <button
-          type="button"
-          className="btn btn-primary btn-block"
-          onClick={openCreate}
-        >
-          <Plus aria-hidden="true" size={20} />
+      titulo="Marcas"
+      subtitulo="Organiza las marcas de los productos de tu tienda."
+      ruta={trail}
+      estado={status}
+      refTitulo={ titleRef }
+      accion={
+        <button type="button" className="btn btn-primary btn-block" onClick={openCreate}>
+          <Plus size={20} />
           Crear marca
         </button>
       }
     >
-      <Alert type="error">{actionError}</Alert>
+      {actionError && <Alert type="error">{actionError}</Alert>}
 
       <SearchBar
-        config={{
-          label: "Buscar una marca",
-          placeholder: "Nombre de la marca",
-        }}
-        actions={{
-          onSearch: handleSearch,
-        }}
+        etiqueta="Buscar una marca"
+        placeholder="Nombre de la marca"
+        alBuscar={handleSearch}
       />
 
       <CrudCard
-        config={{
-          title: "Marcas de tu tienda",
-          subtitle: "Ordenadas de la A a la Z",
-          badge: loading || loadError ? undefined : countLabel(visible.length),
-        }}
+        titulo="Marcas de tu tienda"
+        subtitulo="Ordenadas de la A a la Z"
+        insignia={loading || loadError ? undefined : countLabel(visible.length)}
+        pagina={page}
+        totalPaginas={totalPages}
+        alCambiarPagina={setPage}
       >
-        <CardCarousel
-          config={{
-            label: "Marcas",
-          }}
-          state={{
-            loading,
-            error: loadError,
-          }}
-        >
-          {visible.map((brand) => (
-            <ItemCard
-              key={brand.id}
-              config={{
-                title: brand.nombre,
-              }}
-              actions={{
-                onEdit: () => openEdit(brand),
-                onDelete: () => askDelete(brand),
-              }}
-            />
-          ))}
-        </CardCarousel>
+        <DataTable
+          columnas={COLUMNS}
+          filas={paginatedItems}
+          cargando={loading}
+          error={loadError}
+          idEnEdicion={editing?.id}
+          alEditar={openEdit}
+          alEliminar={askDelete}
+        />
       </CrudCard>
 
       <Dialog
-        open={formOpen}
-        config={{
-          title: editing ? "Editar marca" : "Crear marca",
-        }}
-        events={{ onClose: () => setFormOpen(false) }}
+        abierto={formOpen}
+        titulo={editing ? "Editar marca" : "Crear marca"}
+        alCerrar={() => setFormOpen(false)}
       >
         {formOpen && (
           <BrandForm
             brand={editing}
             onSave={handleSave}
-            onCancel={() => setFormOpen(false)}
+            onCancel={() => { setToDelete(null)}}
           />
         )}
       </Dialog>
 
       <ConfirmDialog
-        config={{
-          title: `¿Eliminar la marca ${toDelete?.nombre ?? ""}?`,
-          ConfirmIcon: Trash2,
-          confirmLabel: "Eliminar marca",
-        }}
-        actions={{
-          onConfirm: confirmDelete,
-          onCancel: () => setToDelete(null),
-          onClosed: handleDeleteClosed,
-        }}
-        state={{
-          open: toDelete !== null,
-          loading: deleting,
-          error: deleteError,
-        }}
+        abierto={toDelete !== null}
+        titulo="¿Eliminar esta marca?"
+        textoConfirmar="Eliminar marca"
+        textoCargando="Eliminando…"
+        tipo="peligro"
+        IconoConfirmar={Trash2}
+        cargando={deleting}
+        error={deleteError}
+        alConfirmar={confirmDelete}
+        alCancelar={() => setToDelete(null)}
       >
-        <p>
-          Esta marca se quitará de tu tienda. No podrás deshacer esta acción.
-        </p>
+        <p>Esta marca «{toDelete?.nombre}» se quitará de tu tienda. No podrás deshacer esta acción.</p>
       </ConfirmDialog>
     </CrudPage>
   );

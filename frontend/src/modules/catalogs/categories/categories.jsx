@@ -2,18 +2,24 @@ import { useRef, useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import {
   Alert,
-  CardCarousel,
   ConfirmDialog,
   CrudCard,
   CrudPage,
+  DataTable,
   Dialog,
-  ItemCard,
   SearchBar,
 } from "../../../components/crud";
 import CategoryForm from "./category-form";
 import { useCategories } from "./use-category";
 
-const trail = [{ label: "Menú", to: "/" }, { label: "Categorias" }];
+const trail = [
+  { label: "Menú", to: "/" }, 
+  { label: "Administración", to: "/administracion" },
+  { label: "Categorias" }
+];
+
+const COLUMNS = [{ key: "nombre", header: "Nombre" }];
+const PAGE_SIZE = 5;
 
 const normalize = (text) =>
   text
@@ -25,15 +31,8 @@ const countLabel = (n) => `${n} ${n === 1 ? "categoria" : "categorias"}`;
 
 export default function Categories() {
   const titleRef = useRef(null);
-  const focusTitleOnClose = useRef(false);
-  const {
-    categories,
-    loading,
-    loadError,
-    getCategory,
-    saveCategory,
-    removeCategory,
-  } = useCategories();
+  const { categories, loading, loadError, getCategory, saveCategory, removeCategory, } = 
+    useCategories();
 
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("");
@@ -47,18 +46,20 @@ export default function Categories() {
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
 
+  const [page, setPage] = useState(1);
+
   const filterBy = (text) =>
     categories.filter((c) => normalize(c.nombre).includes(normalize(text)));
+  
   const visible = filterBy(query);
 
-  const handleSearch = (text) => {
-    setQuery(text);
-    const n = filterBy(text).length;
-    setStatus(
-      text
-        ? `${countLabel(n)} ${n === 1 ? "encontrada" : "encontradas"} para «${text}»`
-        : "",
-    );
+  const totalPages = Math.ceil(visible.length / PAGE_SIZE );
+  const index = (page - 1) * PAGE_SIZE ;
+  const paginatedItems  = visible.slice(index, index + PAGE_SIZE );
+
+  const handleSearch = (texto) => {
+    setQuery(texto);
+    setPage(1);
   };
 
   const openCreate = () => {
@@ -102,7 +103,6 @@ export default function Categories() {
     try {
       await removeCategory(toDelete.id);
       setStatus(`Categoria «${toDelete.nombre}» eliminada`);
-      focusTitleOnClose.current = true;
       setToDelete(null);
     } catch (err) {
       setDeleteError(err.message);
@@ -111,110 +111,75 @@ export default function Categories() {
     }
   };
 
-  const handleDeleteClosed = () => {
-    if (!focusTitleOnClose.current) return;
-    focusTitleOnClose.current = false;
-    titleRef.current?.focus();
-  };
-
   return (
     <CrudPage
-      config={{
-        title: "Categorias",
-        subtitle: "Organiza las categorias de los productos de tu tienda.",
-      }}
-      navigation={{ trail }}
-      feedback={{ status }}
-      refs={{ titleRef }}
-      action={
-        <button
-          type="button"
-          className="btn btn-primary btn-block"
-          onClick={openCreate}
-        >
-          <Plus aria-hidden="true" size={20} />
-          Crear categoria
-        </button>
-      }
+    titulo="Categorias"
+    subtitulo="Organiza las categorias de los productos de tu tienda."
+    ruta={trail}
+    estado={status}
+    refTitulo={titleRef}
+    accion={
+      <button type="button" className="btn btn-primary btn-block" onClick={openCreate}>
+        <Plus size={20} />
+        Crear categoria
+      </button>
+    }
     >
-      <Alert type="error">{actionError}</Alert>
+      {actionError && <Alert type="error">{actionError}</Alert>}
 
       <SearchBar
-        config={{
-          label: "Buscar una categoria",
-          placeholder: "Nombre de la categoria",
-        }}
-        actions={{
-          onSearch: handleSearch,
-        }}
+        etiqueta="Buscar una categoria"
+        placeholder="Nombre de la categoria"
+        alBuscar={handleSearch}
       />
 
       <CrudCard
-        config={{
-          title: "Categorias de tu tienda",
-          subtitle: "Ordenadas de la A a la Z",
-          badge: loading || loadError ? undefined : countLabel(visible.length),
-        }}
+        titulo="Categorias de tu tienda"
+        subtitulo="Ordenadas de la A a la Z"
+        insignia={loading || loadError ? undefined : countLabel(visible.length)}
+        pagina={page}
+        totalPaginas={totalPages}
+        alCambiarPagina={setPage}
       >
-        <CardCarousel
-          config={{
-            label: "Categorias",
-          }}
-          state={{
-            loading,
-            error: loadError,
-          }}
-        >
-          {visible.map((category) => (
-            <ItemCard
-              key={category.id}
-              config={{
-                title: category.nombre,
-              }}
-              actions={{
-                onEdit: () => openEdit(category),
-                onDelete: () => askDelete(category),
-              }}
-            />
-          ))}
-        </CardCarousel>
+        <DataTable
+          columnas={COLUMNS}
+          filas={paginatedItems}
+          cargando={loading}
+          error={loadError}
+          idEnEdicion={editing?.id}
+          alEditar={openEdit}
+          alEliminar={askDelete}
+        />
       </CrudCard>
 
       <Dialog
-        open={formOpen}
-        config={{
-          title: editing ? "Editar categoria" : "Crear categoria",
-        }}
-        events={{ onClose: () => setFormOpen(false) }}
+        abierto={formOpen}
+        titulo={editing ? "Editar categoria" : "Crear categoria"}
+        alCerrar={() => setFormOpen(false)}
       >
         {formOpen && (
           <CategoryForm
             category={editing}
             onSave={handleSave}
-            onCancel={() => setFormOpen(false)}
+            onCancel={() => { setToDelete(null)}}
           />
         )}
       </Dialog>
 
       <ConfirmDialog
-        config={{
-          title: `¿Eliminar la categoria ${toDelete?.nombre ?? ""}?`,
-          ConfirmIcon: Trash2,
-          confirmLabel: "Eliminar categoria",
-        }}
-        actions={{
-          onConfirm: confirmDelete,
-          onCancel: () => setToDelete(null),
-          onClosed: handleDeleteClosed,
-        }}
-        state={{
-          open: toDelete !== null,
-          loading: deleting,
-          error: deleteError,
-        }}
+        abierto={toDelete !== null}
+        titulo="¿Eliminar esta categoria?"
+        textoConfirmar="Eliminar categoria"
+        textoCargando="Eliminando…"
+        tipo="peligro"
+        IconoConfirmar={Trash2}
+        cargando={deleting}
+        error={deleteError}
+        alConfirmar={confirmDelete}
+        alCancelar={() => setToDelete(null)}
       >
         <p>
-          Esta categoria se quitará de tu tienda. No podrás deshacer esta acción.
+          Esta categoria «{toDelete?.nombre}» se quitará de tu tienda. No podrás deshacer esta acción.
         </p>
       </ConfirmDialog>
     </CrudPage>

@@ -1,8 +1,10 @@
 import { useId, useRef, useState } from "react";
 import { Alert } from "../../../components/ui/alert";
 
-export default function CategoryForm({ category, onSave, onCancel }) {
-  const errorId = useId();
+export default function CategoryForm(props) {
+  const { category, onSave, onCancel } = props;
+
+  const inputId = useId();
   const inputRef = useRef(null);
 
   const [nombre, setNombre] = useState(category?.nombre ?? "");
@@ -34,30 +36,23 @@ export default function CategoryForm({ category, onSave, onCancel }) {
   return (
     <form className="crud-form" onSubmit={handleSubmit} noValidate>
       <div className="form-field">
-        <label htmlFor="category-name" className="form-label">
-          Nombre
-        </label>
+        <label htmlFor={inputId} className="form-label">Nombre</label>
         <input
-          id="category-name"
+          id={inputId}
           ref={inputRef}
           className="form-input"
           type="text"
           maxLength={50}
-          autoComplete="off"
           data-autofocus
           value={nombre}
           onChange={(e) => setNombre(e.target.value)}
-          aria-invalid={!!error}
-          aria-describedby={error ? errorId : undefined}
         />
-        <Alert type="error" id={errorId}>
-          {error}
-        </Alert>
+        {error && <Alert type="error">{error}</Alert>}
       </div>
 
       <div className="crud-dialog-actions">
         <button type="submit" className="btn btn-primary" disabled={saving}>
-          {saving ? "Guardando…" : category ? "Guardar cambios" : "Crear categoria"}
+          {saving ? "Guardando…" : "Guardar"}
         </button>
         <button type="button" className="btn btn-secondary" onClick={onCancel}>
           Cancelar
