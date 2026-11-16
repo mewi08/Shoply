@@ -40,7 +40,7 @@ export function CardCarousel(props) {
         </button>
 
         <p className="carousel-count">
-          {current + 1} de {items.length}
+          {currentIndex + 1} de {items.length}
         </p>
 
         <button
