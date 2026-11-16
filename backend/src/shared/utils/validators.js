@@ -38,7 +38,8 @@ const DOC_REGEX = {
   RUC: /^\d{11}$/,
 };
 
-exports.checkDocument = ({ tipo_doc, num_doc } = {}) => {
+exports.checkDocument = (person) => {
+  const { tipo_doc, num_doc } = person;
   const regex = DOC_REGEX[tipo_doc];
   if (!regex)
     throw httpError(400, "Tipo de documento inválido (DNI, CE o RUC)");
@@ -46,7 +47,7 @@ exports.checkDocument = ({ tipo_doc, num_doc } = {}) => {
     throw httpError(400, `Número de ${tipo_doc} inválido`);
 };
 
-exports.checkPersona = (p = {}) => {
+exports.checkPersona = (p) => {
   exports.checkDocument(p);
 
   if (p.tipo_doc === "RUC") exports.requireFields(p, ["razon_social"]);
