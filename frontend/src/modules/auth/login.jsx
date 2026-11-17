@@ -59,8 +59,6 @@ export default function Login() {
               required
               value={form.username}
               onChange={handleChange}
-              aria-invalid={!!error}
-              aria-describedby={error ? errorId : undefined}
             />
           </div>
 
@@ -78,21 +76,13 @@ export default function Login() {
                 required
                 value={form.password}
                 onChange={handleChange}
-                aria-invalid={!!error}
-                aria-describedby={error ? errorId : undefined}
               />
               <button
                 type="button"
                 className="form-toggle"
-                aria-label="Mostrar contraseña"
-                aria-pressed={showPassword}
                 onClick={() => setShowPassword(!showPassword)}
               >
-                {showPassword ? (
-                  <EyeOff aria-hidden="true" size={20} />
-                ) : (
-                  <Eye aria-hidden="true" size={20} />
-                )}
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
             </div>
           </div>

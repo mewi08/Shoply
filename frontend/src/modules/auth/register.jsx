@@ -2,161 +2,164 @@ import { useEffect, useId, useRef, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { Link } from "react-router-dom";
 import { register } from "./auth.service";
-import { DOC_INFO, validateStep } from "./register.validators";
-import "./auth.css";
 
-const STEPS = ["Tus datos", "Tu acceso", "Tu tienda"];
+const isCompany = (form) => form.tipo_doc === "RUC";
+const isPerson = (form) => form.tipo_doc !== "RUC";
 
-const INITIAL = {
-  tipo_doc: "DNI", num_doc: "", nombres: "", ape_paterno: "", ape_materno: "",
-  razon_social: "", correo: "", telefono: "",
-  username: "", password: "",
-  tienda_nombre: "", tienda_descripcion: "", tienda_direccion: "", tienda_telefono: "",
-};
+const STEPS = [
+  {
+    title: "Tus datos",
+    fields: [
+      {
+        name: "tipo_doc", label: "Tipo de documento", type: "select", initial: "DNI", required: true,
+        options: [["DNI", "DNI"], ["CE", "Carné de extranjería"], ["RUC", "RUC"]],
+      },
+      { name: "num_doc", label: "Número de documento", inputMode: "numeric", required: true },
+      { name: "razon_social", label: "Razón social", required: true, show: isCompany },
+      { name: "nombres", label: "Nombres", required: true, show: isPerson },
+      { name: "ape_paterno", label: "Apellido paterno", required: true, show: isPerson },
+      { name: "ape_materno", label: "Apellido materno (opcional)", show: isPerson },
+      { name: "correo", label: "Correo (opcional)", type: "email" },
+      { name: "telefono", label: "Teléfono (opcional)", maxLength: 9, inputMode: "numeric" },
+    ],
+  },
+  {
+    title: "Tu acceso",
+    fields: [
+      { name: "username", label: "Usuario", required: true },
+      { name: "password", label: "Contraseña", type: "password", required: true },
+      { name: "confirm_password", label: "Confirmar contraseña", type: "password", required: true },
+    ],
+  },
+  {
+    title: "Tu tienda",
+    fields: [
+      { name: "tienda_nombre", label: "Nombre de la tienda", required: true },
+      { name: "tienda_descripcion", label: "Descripción (opcional)", maxLength: 200 },
+      { name: "tienda_direccion", label: "Dirección", required: true },
+      { name: "tienda_telefono", label: "Teléfono de la tienda", maxLength: 9, inputMode: "numeric", required: true },
+    ],
+  },
+];
 
-function Field({ label, name, form, errors, onChange, ...props }) {
+
+const FIELDS = STEPS.flatMap((step) => step.fields);
+const INITIAL = Object.fromEntries(FIELDS.map((f) => [f.name, f.initial ?? ""]));
+
+function Field(props) {
+  const { field, value, maxLength, onChange } = props;
+
   const id = useId();
-  const errorId = `${id}-error`;
-  return (
-    <div className="form-field">
-      <label htmlFor={id} className="form-label">{label}</label>
-      <input
-        id={id}
-        name={name}
-        className="form-input"
-        value={form[name]}
-        onChange={onChange}
-        aria-invalid={!!errors[name]}
-        aria-describedby={errors[name] ? errorId : undefined}
-        {...props}
-      />
-      {errors[name] && <p id={errorId} className="form-error">{errors[name]}</p>}
-    </div>
-  );
-}
-
-function PasswordField({ label, name, form, errors, onChange }) {
-  const id = useId();
-  const errorId = `${id}-error`;
   const [show, setShow] = useState(false);
+  const isPassword = field.type === "password";
 
   return (
     <div className="form-field">
-      <label htmlFor={id} className="form-label">{label}</label>
-      <div className="form-password">
-        <input
-          id={id}
-          name={name}
-          className="form-input"
-          type={show ? "text" : "password"}
-          autoComplete="new-password"
-          value={form[name]}
-          onChange={onChange}
-          aria-invalid={!!errors[name]}
-          aria-describedby={errors[name] ? errorId : undefined}
-        />
-        <button
-          type="button"
-          className="form-toggle"
-          aria-label="Mostrar contraseña"
-          aria-pressed={show}
-          onClick={() => setShow(!show)}
-        >
-          {show ? <EyeOff aria-hidden="true" size={20} /> : <Eye aria-hidden="true" size={20} />}
-        </button>
-      </div>
-      {errors[name] && <p id={errorId} className="form-error">{errors[name]}</p>}
+      <label htmlFor={id} className="form-label">{field.label}</label>
+
+      {field.type === "select" ? (
+        <select id={id} name={field.name} className="form-input" value={value} onChange={onChange}>
+          {field.options.map(([code, text]) => (
+            <option key={code} value={code}>{text}</option>
+          ))}
+        </select>
+      ) : (
+        <div className={isPassword ? "form-password" : undefined}>
+          <input
+            id={id}
+            name={field.name}
+            className="form-input"
+            type={isPassword && show ? "text" : field.type}
+            maxLength={maxLength}
+            inputMode={field.inputMode}
+            value={value}
+            onChange={onChange}
+          />
+          {isPassword && (
+            <button type="button" className="form-toggle" onClick={() => setShow(!show)}>
+              {show ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
 
 export default function Register() {
-  const [step, setStep] = useState(0);
+  const [stepIndex, setStepIndex] = useState(0);
   const [form, setForm] = useState(INITIAL);
-  const [errors, setErrors] = useState({});
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const titleRef = useRef(null);
 
+  const step = STEPS[stepIndex];
+  const isLastStep = stepIndex === STEPS.length - 1;
+  const buttonText = isLastStep ? "Enviar solicitud" : "Siguiente";
+  const visibleFields = step.fields.filter((f) => !f.show || f.show(form));
+  const docLength = isCompany(form) ? 11 : 8;
+
   useEffect(() => {
-    if (step > 0) titleRef.current?.focus();
-  }, [step]);
+    if (stepIndex > 0) titleRef.current?.focus();
+  }, [stepIndex]);
 
-  const isRuc = form.tipo_doc === "RUC";
-  const doc = DOC_INFO[form.tipo_doc];
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-
-    setForm((prev) => {
-      if (name === "tipo_doc") return { ...prev, tipo_doc: value, num_doc: "" };
-      if (name === "num_doc") {
-        const { numeric, max } = DOC_INFO[prev.tipo_doc];
-        const clean = numeric
-          ? value.replace(/\D/g, "")
-          : value.replace(/[^A-Za-z0-9]/g, "");
-        return { ...prev, num_doc: clean.slice(0, max) };
-      }
-      return { ...prev, [name]: value };
-    });
-
-    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: undefined }));
+  const stepClass = (i) => {
+    if (i < stepIndex) return "is-done";
+    if (i === stepIndex) return "is-current";
+    return undefined;
   };
 
-  const field = (label, name, props) => (
-    <Field label={label} name={name} form={form} errors={errors} onChange={handleChange} {...props} />
-  );
+  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
-  const back = () => {
+  const goBack = () => {
     setError("");
-    setErrors({});
-    setStep(step - 1);
+    setStepIndex(stepIndex - 1);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (form.password !== form.confirm_password) {
+      setError("Las contraseñas no coinciden");
+      return;
+    }
+
     setError("");
 
-    const found = validateStep(step, form);
-    setErrors(found);
-    const first = Object.keys(found)[0];
-    if (first) {
-      e.currentTarget.elements[first]?.focus();
+    if (!isLastStep) {
+      setStepIndex(stepIndex + 1);
       return;
     }
 
-    if (step < STEPS.length - 1) {
-      setStep(step + 1);
-      return;
-    }
+    const data = Object.fromEntries(
+      Object.entries(form).map(([key, value]) => [key, value.trim()]),
+    );
 
-    const t = (v) => v.trim();
+    const names = isCompany(data)
+      ? { razon_social: data.razon_social }
+      : { nombres: data.nombres, ape_paterno: data.ape_paterno, ape_materno: data.ape_materno };
+
     setLoading(true);
+
     try {
-      const res = await register({
+      const response = await register({
         persona: {
-          tipo_doc: form.tipo_doc,
-          num_doc: t(form.num_doc),
-          correo: t(form.correo),
-          telefono: t(form.telefono),
-          ...(isRuc
-            ? { razon_social: t(form.razon_social) }
-            : {
-                nombres: t(form.nombres),
-                ape_paterno: t(form.ape_paterno),
-                ape_materno: t(form.ape_materno),
-              }),
+          tipo_doc: data.tipo_doc,
+          num_doc: data.num_doc,
+          correo: data.correo,
+          telefono: data.telefono,
+          ...names,
         },
-        usuario: { username: t(form.username), password: form.password },
+        usuario: { username: data.username, password: form.password },
         tienda: {
-          nombre: t(form.tienda_nombre),
-          descripcion: t(form.tienda_descripcion),
-          direccion: t(form.tienda_direccion),
-          telefono: t(form.tienda_telefono),
+          nombre: data.tienda_nombre,
+          descripcion: data.tienda_descripcion,
+          direccion: data.tienda_direccion,
+          telefono: data.tienda_telefono,
         },
       });
-      setMessage(res.message);
+      setMessage(response.message);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -182,15 +185,11 @@ export default function Register() {
       <section className="auth-card is-wide">
         <h1 className="auth-title">Crea tu cuenta</h1>
 
-        <ol className="stepper" aria-label="Progreso del registro">
-          {STEPS.map((name, i) => (
-            <li
-              key={name}
-              className={i < step ? "is-done" : i === step ? "is-current" : undefined}
-              aria-current={i === step ? "step" : undefined}
-            >
-              <span className="stepper-dot" aria-hidden="true">{i < step ? "✓" : i + 1}</span>
-              <span className="stepper-label">{name}</span>
+        <ol className="stepper">
+          {STEPS.map((item, i) => (
+            <li key={item.title} className={stepClass(i)}>
+              <span className="stepper-dot">{i < stepIndex ? "✓" : i + 1}</span>
+              <span className="stepper-label">{item.title}</span>
             </li>
           ))}
         </ol>
@@ -199,84 +198,33 @@ export default function Register() {
           {error && <p className="form-error" role="alert">{error}</p>}
 
           <h2 className="auth-step-title" ref={titleRef} tabIndex={-1}>
-            Paso {step + 1} de {STEPS.length}: {STEPS[step]}
+            Paso {stepIndex + 1} de {STEPS.length}: {step.title}
           </h2>
 
-          {step === 0 && (
-            <>
-              <div className="form-field">
-                <label htmlFor="tipo_doc" className="form-label">Tipo de documento</label>
-                <select
-                  id="tipo_doc"
-                  name="tipo_doc"
-                  className="form-input"
-                  value={form.tipo_doc}
-                  onChange={handleChange}
-                >
-                  <option value="DNI">DNI</option>
-                  <option value="CE">Carné de extranjería</option>
-                  <option value="RUC">RUC</option>
-                </select>
-              </div>
-              {field(`Número de documento (${doc.hint})`, "num_doc", {
-                maxLength: doc.max,
-                inputMode: doc.numeric ? "numeric" : "text",
-                autoComplete: "off",
-              })}
-              {isRuc ? (
-                field("Razón social", "razon_social")
-              ) : (
-                <>
-                  {field("Nombres", "nombres", { autoComplete: "given-name" })}
-                  {field("Apellido paterno", "ape_paterno")}
-                  {field("Apellido materno (opcional)", "ape_materno")}
-                </>
-              )}
-              {field("Correo (opcional)", "correo", { type: "email", autoComplete: "email" })}
-              {field("Teléfono (opcional)", "telefono", { inputMode: "numeric", maxLength: 9, autoComplete: "tel" })}
-            </>
-          )}
+          {visibleFields.map((field) => (
+          <Field
+            key={field.name}
+            field={field}
+            value={form[field.name]}
+            maxLength={field.name === "num_doc" ? docLength : field.maxLength}
+            onChange={handleChange}
+          />
+        ))}
 
-          {step === 1 && (
-            <>
-              {field("Usuario", "username", { autoComplete: "username" })}
-              <PasswordField
-                label="Contraseña"
-                name="password"
-                form={form}
-                errors={errors}
-                onChange={handleChange}
-              />
-              <PasswordField
-                label="Confirmar contraseña"
-                name="confirm_password"
-                form={form}
-                errors={errors}
-                onChange={handleChange}
-              />
-            </>
-          )}
-
-          {step === 2 && (
-            <>
-              {field("Nombre de la tienda", "tienda_nombre")}
-              {field("Descripción (opcional)", "tienda_descripcion", { maxLength: 200 })}
-              {field("Dirección", "tienda_direccion")}
-              {field("Teléfono de la tienda", "tienda_telefono", { inputMode: "numeric", maxLength: 9 })}
-              <p className="auth-note">
-                Revisaremos tu solicitud antes de activar la tienda. Podrás ingresar cuando sea aprobada.
-              </p>
-            </>
+          {isLastStep && (
+            <p className="auth-note">
+              Revisaremos tu solicitud antes de activar la tienda. Podrás ingresar cuando sea aprobada.
+            </p>
           )}
 
           <div className="auth-actions">
-            {step > 0 && (
-              <button type="button" className="btn btn-secondary" onClick={back} disabled={loading}>
+            {stepIndex > 0 && (
+              <button type="button" className="btn btn-secondary" onClick={goBack} disabled={loading}>
                 Atrás
               </button>
             )}
             <button type="submit" className="btn btn-primary" disabled={loading}>
-              {step < STEPS.length - 1 ? "Siguiente" : loading ? "Enviando…" : "Enviar solicitud"}
+              {loading ? "Enviando…" : buttonText}
             </button>
           </div>
         </form>
