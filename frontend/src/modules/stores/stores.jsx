@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { Ban, X } from "lucide-react";
 import {
   Alert,
@@ -21,34 +21,26 @@ const STATUS = {
   rechazada: { label: "Rechazada", cls: "is-rejected" },
 };
 
-const normalize = (text) => text.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
-
-const estadoColumn = {
-  key: "estado",
-  header: "Estado",
-  render: (s) => (
-    <span className={`status-tag ${STATUS[s.estado].cls}`}>
-      {STATUS[s.estado].label}
-    </span>
-  ),
-};
-
-const BASE_COLUMNS = [
+const COLUMNS = [
   { key: "nombre", header: "Nombre" },
   { key: "direccion", header: "Dirección" },
   { key: "telefono", header: "Teléfono" },
+  { key: "ruc", header: "RUC", render: (s) => s.ruc ?? "—" },
+  {
+    key: "estado",
+    header: "Estado",
+    render: (s) => (
+      <span className={`status-tag ${STATUS[s.estado].cls}`}>
+        {STATUS[s.estado].label}
+      </span>
+    ),
+  },
 ];
 
-const REQUEST_COLUMNS = [...BASE_COLUMNS, estadoColumn];
-const STORE_COLUMNS = [
-  ...BASE_COLUMNS,
-  { key: "ruc", header: "RUC", render: (s) => s.ruc ?? "—" },
-  estadoColumn,
-];
+const normalize = (text) =>
+  text.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
 
 export default function Stores() {
-  const titleRef = useRef(null);
-  const focusTitleOnClose = useRef(false);
   const {
     requests, stores, loading, loadError,
     updateStore, approve, reject, deactivate, reactivate,
@@ -58,6 +50,7 @@ export default function Stores() {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("");
   const [actionError, setActionError] = useState("");
+
   const [editing, setEditing] = useState(null);
 
   const [confirming, setConfirming] = useState(null);
@@ -65,30 +58,19 @@ export default function Stores() {
   const [confirmError, setConfirmError] = useState("");
 
   const isRequests = tab === "requests";
-  const list = isRequests ? requests : stores;
+  const requestList = requests.filter((s) => s.estado !== "activa");
+  const list = isRequests ? requestList : stores;
+
+
+
+  const visible = list.filter((s) =>
+    normalize(`${s.nombre} ${s.ruc ?? ""}`).includes(normalize(query)),
+  );
+
   const pendingCount = requests.filter((s) => s.estado === "pendiente").length;
 
-  const countLabel = (n) => {
-    const [one, many] = isRequests ? ["solicitud", "solicitudes"] : ["tienda", "tiendas"];
-    return `${n} ${n === 1 ? one : many}`;
-  };
-
-  const filterBy = (text) =>
-    list.filter((s) =>
-      normalize(`${s.nombre} ${s.ruc ?? ""}`).includes(normalize(text)),
-    );
-  const visible = filterBy(query);
-
-  const handleSearch = (text) => {
-    setQuery(text);
-    const n = filterBy(text).length;
-    setStatus(
-      text ? `${countLabel(n)} ${n === 1 ? "encontrada" : "encontradas"} para «${text}»` : "",
-    );
-  };
-
-  const changeTab = (next) => {
-    setTab(next);
+  const changeTab = (nextTab) => {
+    setTab(nextTab);
     setQuery("");
     setStatus("");
     setActionError("");
@@ -97,27 +79,45 @@ export default function Stores() {
   const perform = async (action, id) => {
     setStatus("");
     setActionError("");
+
     try {
-      const res = await action(id);
-      setStatus(res.message);
-      titleRef.current?.focus();
+      const response = await action(id);
+      setStatus(response.message);
     } catch (err) {
       setActionError(err.message);
     }
   };
 
-  const ask = (s, { title, text, confirmLabel, Icon, action }) => {
+  const ask = (store, config) => {
     setConfirmError("");
-    setConfirming({ id: s.id, title, text, confirmLabel, Icon, action });
+    setConfirming({ id: store.id, ...config });
   };
+
+  const askReject = (store) =>
+    ask(store, {
+      title: `¿Rechazar la solicitud de ${store.nombre}?`,
+      text: "Esta acción no se puede deshacer.",
+      confirmText: "Rechazar solicitud",
+      Icon: X,
+      action: reject,
+    });
+
+  const askDeactivate = (store) =>
+    ask(store, {
+      title: `¿Desactivar la tienda ${store.nombre}?`,
+      text: "La tienda y sus usuarios perderán el acceso hasta que la reactives.",
+      confirmText: "Desactivar tienda",
+      Icon: Ban,
+      action: deactivate,
+    });
 
   const handleConfirm = async () => {
     setConfirmLoading(true);
     setConfirmError("");
+
     try {
-      const res = await confirming.action(confirming.id);
-      setStatus(res.message);
-      focusTitleOnClose.current = true;
+      const response = await confirming.action(confirming.id);
+      setStatus(response.message);
       setConfirming(null);
     } catch (err) {
       setConfirmError(err.message);
@@ -126,145 +126,108 @@ export default function Stores() {
     }
   };
 
-  const handleConfirmClosed = () => {
-    if (!focusTitleOnClose.current) return;
-    focusTitleOnClose.current = false;
-    titleRef.current?.focus();
-  };
-
   const handleSave = async (id, data) => {
-    const res = await updateStore(id, data);
-    setStatus(res.message);
+    const response = await updateStore(id, data);
+    setStatus(response.message);
     setEditing(null);
   };
 
-  const requestActions = (s) =>
-    s.estado === "pendiente" && (
+const renderActions = (store) => {
+  if (isRequests && store.estado !== "pendiente") return null;
+
+  if (isRequests) {
+    return (
       <>
-        <button type="button" className="btn btn-primary" onClick={() => perform(approve, s.id)}>
+        <button type="button" className="btn btn-primary" onClick={() => perform(approve, store.id)}>
           Aprobar
         </button>
-        <button
-          type="button"
-          className="btn btn-danger-soft"
-          onClick={() =>
-            ask(s, {
-              title: `¿Rechazar la solicitud de ${s.nombre}?`,
-              text: "Esta acción no se puede deshacer.",
-              confirmLabel: "Rechazar solicitud",
-              Icon: X,
-              action: reject,
-            })
-          }
-        >
+        <button type="button" className="btn btn-danger-soft" onClick={() => askReject(store)}>
           Rechazar
         </button>
       </>
     );
+  }
 
-  const storeActions = (s) =>
-    s.estado === "activa" ? (
-      <button
-        type="button"
-        className="btn btn-danger-soft"
-        onClick={() =>
-          ask(s, {
-            title: `¿Desactivar la tienda ${s.nombre}?`,
-            text: "La tienda y sus usuarios perderán el acceso hasta que la reactives.",
-            confirmLabel: "Desactivar tienda",
-            Icon: Ban,
-            action: deactivate,
-          })
-        }
-      >
-        Desactivar
-      </button>
-    ) : (
-      <button type="button" className="btn btn-secondary" onClick={() => perform(reactivate, s.id)}>
+    if (store.estado === "activa") {
+      return (
+        <button type="button" className="btn btn-danger-soft" onClick={() => askDeactivate(store)}>
+          Desactivar
+        </button>
+      );
+    }
+
+    return (
+      <button type="button" className="btn btn-secondary" onClick={() => perform(reactivate, store.id)}>
         Reactivar
       </button>
     );
+  };
 
   return (
     <CrudPage
-      config={{
-        title: "Tiendas",
-        subtitle: "Revisa las solicitudes y administra las tiendas.",
-      }}
-      navigation={{ trail }}
-      feedback={{ status }}
-      refs={{ titleRef }}
+      titulo="Tiendas"
+      subtitulo="Revisa las solicitudes y administra las tiendas."
+      ruta={trail}
+      estado={status}
     >
       <div className="crud-tabs">
-        <button type="button" className="crud-tab" aria-pressed={isRequests} onClick={() => changeTab("requests")}>
+        <button type="button" className="crud-tab" onClick={() => changeTab("requests")}>
           Solicitudes{pendingCount > 0 && ` (${pendingCount})`}
         </button>
-        <button type="button" className="crud-tab" aria-pressed={!isRequests} onClick={() => changeTab("stores")}>
+        <button type="button" className="crud-tab" onClick={() => changeTab("stores")}>
           Tiendas
         </button>
       </div>
 
-      <Alert type="error">{actionError}</Alert>
+      {actionError && <Alert type="error">{actionError}</Alert>}
 
       <SearchBar
         key={tab}
-        config={{
-          label: isRequests ? "Buscar una solicitud" : "Buscar una tienda",
-          placeholder: isRequests ? "Nombre de la tienda" : "Nombre o RUC",
-        }}
-        actions={{ onSearch: handleSearch }}
+        etiqueta={isRequests ? "Buscar una solicitud" : "Buscar una tienda"}
+        placeholder="Nombre o RUC"
+        alBuscar={setQuery}
       />
 
       <CrudCard
-        config={{
-          title: isRequests ? "Solicitudes" : "Tiendas",
-          subtitle: isRequests ? "Tiendas que esperan aprobación" : "Tiendas ya aprobadas",
-          badge: loading || loadError ? undefined : countLabel(visible.length),
-        }}
+        titulo={isRequests ? "Solicitudes" : "Tiendas"}
+        subtitulo={isRequests ? "Tiendas que esperan aprobación" : "Tiendas ya aprobadas"}
+        insignia={loading || loadError ? undefined : `${visible.length}`}
       >
         <DataTable
-          table={{
-            columns: isRequests ? REQUEST_COLUMNS : STORE_COLUMNS,
-            rows: visible,
-            label: isRequests ? "Solicitudes" : "Tiendas",
-            getRowName: (s) => s.nombre,
-          }}
-          state={{ loading, error: loadError }}
-          actions={
-            isRequests
-              ? { renderActions: requestActions }
-              : { onEdit: setEditing, renderActions: storeActions }
-          }
+          columnas={COLUMNS}
+          filas={visible}
+          cargando={loading}
+          error={loadError}
+          alEditar={isRequests ? undefined : setEditing}
+          accionesExtra={renderActions}
         />
       </CrudCard>
 
       <Dialog
-        open={editing !== null}
-        config={{ title: "Editar tienda" }}
-        events={{ onClose: () => setEditing(null) }}
+        abierto={editing !== null}
+        titulo="Editar tienda"
+        alCerrar={() => setEditing(null)}
       >
         {editing && (
-          <StoreForm store={editing} onSave={handleSave} onCancel={() => setEditing(null)} />
+          <StoreForm
+            store={editing}
+            onSave={handleSave}
+            onCancel={() => setEditing(null)}
+          />
         )}
       </Dialog>
 
       <ConfirmDialog
-        config={{
-          title: confirming?.title ?? "",
-          ConfirmIcon: confirming?.Icon,
-          confirmLabel: confirming?.confirmLabel,
-          busyLabel: "Procesando…",
-        }}
-        actions={{
-          onConfirm: handleConfirm,
-          onCancel: () => setConfirming(null),
-          onClosed: handleConfirmClosed,
-        }}
-        state={{
-          open: confirming !== null,
-          loading: confirmLoading,
-          error: confirmError,
-        }}
+        abierto={confirming !== null}
+        titulo={confirming?.title ?? ""}
+        textoConfirmar={confirming?.confirmText}
+        textoCargando="Procesando…"
+        tipo="peligro"
+        IconoConfirmar={confirming?.Icon}
+        cargando={confirmLoading}
+        error={confirmError}
+        alConfirmar={handleConfirm}
+        alCancelar={() => setConfirming(null)}
       >
         <p>{confirming?.text}</p>
       </ConfirmDialog>

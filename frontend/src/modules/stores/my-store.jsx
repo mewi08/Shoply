@@ -13,37 +13,40 @@ const FIELDS = [
   ["RUC", "ruc"],
 ];
 
-export default function MyStore({ canEdit }) {
+export default function MyStore(props) {
+  const { canEdit } = props;
+
   const { store, loading, loadError, saveMyStore } = useMyStore();
   const [editing, setEditing] = useState(false);
   const [status, setStatus] = useState("");
 
   const handleSave = async (_, data) => {
-    const res = await saveMyStore(data);
-    setStatus(res.message);
+    const response = await saveMyStore(data);
+    setStatus(response.message);
     setEditing(false);
   };
 
   return (
     <CrudPage
-      config={{ title: "Mi tienda", subtitle: "Los datos de tu negocio." }}
-      navigation={{ trail }}
-      feedback={{ status }}
-      refs={{}}
-      action={
-        canEdit && store && (
+      titulo="Mi tienda"
+      subtitulo="Los datos de tu negocio."
+      ruta={trail}
+      estado={status}
+      accion={
+        canEdit &&
+        store && (
           <button type="button" className="btn btn-primary btn-block" onClick={() => setEditing(true)}>
-            <Pencil aria-hidden="true" size={20} />
+            <Pencil size={20} />
             Editar tienda
           </button>
         )
       }
     >
       {loading && <p className="crud-empty" role="status">Cargando…</p>}
-      <Alert type="error">{loadError}</Alert>
+      {loadError && <Alert type="error">{loadError}</Alert>}
 
       {store && (
-        <CrudCard config={{ title: store.nombre }}>
+        <CrudCard titulo={store.nombre}>
           <dl className="store-info">
             {FIELDS.map(([label, key]) => (
               <div key={key}>
@@ -56,9 +59,9 @@ export default function MyStore({ canEdit }) {
       )}
 
       <Dialog
-        open={editing}
-        config={{ title: "Editar tienda" }}
-        events={{ onClose: () => setEditing(false) }}
+        abierto={editing}
+        titulo="Editar tienda"
+        alCerrar={() => setEditing(false)}
       >
         {editing && (
           <StoreForm store={store} onSave={handleSave} onCancel={() => setEditing(false)} />
