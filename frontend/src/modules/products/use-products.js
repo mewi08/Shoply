@@ -10,30 +10,49 @@ import {
   update,
 } from "./products.service";
 
-export function useProducts() {
+export function useProducts(filters = {}) {
+  const { buscar, idmarca, idcategoria, page, limit } = filters;
+  const params = { buscar, idmarca, idcategoria, page, limit };
+
   const [products, setProducts] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
   const [catalogs, setCatalogs] = useState({ brands: [], categories: [], units: [] });
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
 
+  const showResult = (data) => {
+    setProducts(data.items);
+    setTotal(data.total);
+    setTotalPages(data.totalPages);
+  };
+
+  useEffect(() => {
+    Promise.all([listBrands(), listCategories(), listUnits()])
+      .then(([b, c, u]) =>
+        setCatalogs({ brands: b.data, categories: c.data, units: u.data }),
+      )
+      .catch((err) => setLoadError(err.message));
+  }, []);
+
   useEffect(() => {
     let active = true;
-    Promise.all([list(), listBrands(), listCategories(), listUnits()])
-      .then(([p, b, c, u]) => {
-        if (!active) return;
-        setProducts(p.data);
-        setCatalogs({ brands: b.data, categories: c.data, units: u.data });
-      })
+    setLoading(true);
+    setLoadError("");
+
+    list(params)
+      .then((res) => active && showResult(res.data))
       .catch((err) => active && setLoadError(err.message))
       .finally(() => active && setLoading(false));
+
     return () => {
       active = false;
     };
-  }, []);
+  }, [buscar, idmarca, idcategoria, page, limit]);
 
   const refresh = async () => {
-    const res = await list();
-    setProducts(res.data);
+    const res = await list(params);
+    showResult(res.data);
   };
 
   const getProduct = async (id) => {
@@ -54,6 +73,8 @@ export function useProducts() {
 
   return {
     products,
+    total,
+    totalPages,
     catalogs,
     loading,
     loadError,

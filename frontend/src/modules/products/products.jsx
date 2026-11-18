@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { Plus, Power, PowerOff } from "lucide-react";
 import {
   Alert,
@@ -23,33 +23,28 @@ const COLUMNS = [
   { key: "nombre", header: "Nombre" },
   { key: "presentacion", header: "Presentación" },
   { key: "precio_venta", header: "Precio" },
-  { key: "stock", header: "Stock" },
+  { key: "stock", header: "Stock", render: (p) => Number(p.stock) },
   { key: "estado", header: "Estado", render: (p) => (p.estado ? "Activo" : "Inactivo") },
 ];
-
-const PAGE_SIZE = 5;
-
-const normalize = (text) =>
-  text.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
 
 const countLabel = (n) => `${n} ${n === 1 ? "producto" : "productos"}`;
 
 export default function Products() {
-  const titleRef = useRef(null);
-  const focusTitleOnClose = useRef(false);
+  const [query, setQuery] = useState("");
+  const [page, setPage] = useState(1);
+  const [status, setStatus] = useState("");
+
   const {
     products,
+    total,
+    totalPages,
     catalogs,
     loading,
     loadError,
     getProduct,
     saveProduct,
     toggleProductStatus,
-  } = useProducts();
-
-  const [query, setQuery] = useState("");
-  const [status, setStatus] = useState("");
-  const [page, setPage] = useState(1);
+  } = useProducts({ buscar: query, page });
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -59,16 +54,6 @@ export default function Products() {
   const [toDisable, setToDisable] = useState(null);
   const [disabling, setDisabling] = useState(false);
   const [disableError, setDisableError] = useState("");
-
-  const visible = products.filter(
-    (p) =>
-      normalize(p.nombre).includes(normalize(query)) ||
-      normalize(p.codigo).includes(normalize(query)),
-  );
-
-  const totalPages = Math.ceil(visible.length / PAGE_SIZE);
-  const index = (page - 1) * PAGE_SIZE;
-  const productsOfPage = visible.slice(index, index + PAGE_SIZE);
 
   const isActive = Boolean(toDisable?.estado);
   const action = isActive ? "Desactivar" : "Activar";
@@ -129,6 +114,7 @@ export default function Products() {
 
   const renderStatusAction = (product) => {
     const active = Boolean(product.estado);
+
     return (
       <button
         type="button"
@@ -138,7 +124,7 @@ export default function Products() {
         {active ? <PowerOff size={13} /> : <Power size={13} />}
       </button>
     );
-  }
+  };
 
   return (
     <CrudPage
@@ -146,7 +132,6 @@ export default function Products() {
       subtitulo="Administra el catálogo de productos de tu tienda."
       ruta={trail}
       estado={status}
-      referenciaTitulo={titleRef}
       accion={
         <button type="button" className="btn btn-primary btn-block" onClick={openCreate}>
           <Plus size={20} />
@@ -165,14 +150,14 @@ export default function Products() {
       <CrudCard
         titulo="Productos de tu tienda"
         subtitulo="Ordenados por código"
-        insignia={loading || loadError ? undefined : countLabel(visible.length)}
+        insignia={loading || loadError ? undefined : countLabel(total)}
         pagina={page}
         totalPaginas={totalPages}
         alCambiarPagina={setPage}
       >
         <DataTable
           columnas={COLUMNS}
-          filas={productsOfPage}
+          filas={products}
           cargando={loading}
           error={loadError}
           alEditar={openEdit}
