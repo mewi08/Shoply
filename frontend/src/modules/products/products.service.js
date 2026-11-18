@@ -1,6 +1,6 @@
 import { api } from "../../api/request";
 
-export const list = () => api.get("/productos");
+export const list = (filters = {}) => api.get("/productos", filters);
 export const get = (id) => api.get(`/productos/${id}`);
 export const create = (data) => api.post("/productos", data);
 export const update = (id, data) => api.put(`/productos/${id}`, data);
