@@ -1,13 +1,21 @@
-async function request(endpoint, method = "GET", data) {
-  const options = {
+async function request(endpoint, options = {}) {
+  const { method = "GET", data = null, params = null } = options;
+
+  let url = `/api${endpoint}`;
+  if (params) {
+    const query = new URLSearchParams(params).toString();
+    url += `?${query}`;
+  }
+
+  const fetchOptions = {
     method,
     headers: { "Content-Type": "application/json" },
     credentials: "include",
   };
 
-  if (data) options.body = JSON.stringify(data);
+  if (data) fetchOptions.body = JSON.stringify(data);
 
-  const response = await fetch(`/api${endpoint}`, options);
+  const response = await fetch(url, fetchOptions);
   const result = await response.json().catch(() => ({}));
 
   if (!response.ok || !result.success) {
@@ -19,9 +27,9 @@ async function request(endpoint, method = "GET", data) {
 }
 
 export const api = {
-  get: (endpoint) => request(endpoint),
-  post: (endpoint, data) => request(endpoint, "POST", data),
-  put: (endpoint, data) => request(endpoint, "PUT", data),
-  patch: (endpoint, data) => request(endpoint, "PATCH", data),
-  delete: (endpoint) => request(endpoint, "DELETE"),
+  get: (endpoint, params) => request(endpoint, { params }),
+  post: (endpoint, data) => request(endpoint, { method: "POST", data }),
+  put: (endpoint, data) => request(endpoint, { method: "PUT", data }),
+  patch: (endpoint, data) => request(endpoint, { method: "PATCH", data }),
+  delete: (endpoint) => request(endpoint, { method: "DELETE" }),
 };
