@@ -10,5 +10,6 @@ router.use('/productos', verifyToken, require('./products/products.routes'));
 router.use('/lotes', verifyToken, requireLevel('superadmin','admin', 'user'), require('./batches/batches.routes'));
 router.use('/usuarios', verifyToken, requireLevel('superadmin', 'admin'), require('./users/users.routes'));
 router.use('/clientes', verifyToken, require('./clients/clients.routes'));
+router.use('/ventas', verifyToken, requireLevel('admin', 'user'), require('./sales/sales.routes'));
 
 module.exports = router;
