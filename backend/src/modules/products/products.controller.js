@@ -3,7 +3,8 @@ const { sendSuccess } = require('../../shared/utils/response');
 
 exports.list = async (req, res) => {
   const idtienda = req.user.idtienda;
-  const data = await service.list(idtienda);
+  const filters = req.query;
+  const data = await service.list(idtienda, filters);
   sendSuccess(res, { data });
 };
 

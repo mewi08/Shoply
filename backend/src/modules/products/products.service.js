@@ -34,11 +34,56 @@ const prepare = (data) => {
   return cleanData;
 };
 
-exports.list = (idtienda) =>
-  db('productos as p')
-    .where('p.idtienda', idtienda)
-    .select('p.id', 'p.estado', ...allowedFields.map((f) => `p.${f}`))
-    .orderBy('p.codigo');
+const applyFilters = (query, filters  = {}) => {
+  const { buscar, idmarca, idcategoria } = filters ;
+
+  if (idmarca) query.where("p.idmarca", idmarca);
+  if (idcategoria) query.where("p.idcategoria", idcategoria);
+
+  if (buscar) {
+    query.where((q) =>
+      q.where("p.nombre", "like", `%${buscar}%`).orWhere("p.codigo", "like", `%${buscar}%`)
+    );
+  }
+
+  return query;
+};
+
+exports.list = async (idtienda, filters = {}) => {
+  const limit = 5;
+  const page = 1;
+  const offset = (page - 1) * limit;
+
+  const baseQuery = () =>
+    applyFilters(db("productos as p").where("p.idtienda", idtienda), filters);
+
+  const [{ total }] = await baseQuery().count("* as total");
+
+  const items = await baseQuery()
+    .select(
+      "p.id",
+      "p.estado",
+      ...allowedFields.map((f) => `p.${f}`),
+      db.raw(`
+        COALESCE(
+          (SELECT SUM(l.cantidad_actual)
+           FROM lotes l
+           WHERE l.idproducto = p.id), 0
+        ) AS stock
+      `),
+    )
+    .orderBy("p.codigo")
+    .limit(limit)
+    .offset(offset);
+
+  
+  
+  return {
+    items,
+    total: Number(total),
+    totalPages: Math.ceil(Number(total) / limit),
+  };
+};
 
 exports.get = async (id, idtienda) => {
   const row = await db('productos').where({ id, idtienda }).first();
