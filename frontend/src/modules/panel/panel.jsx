@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
 import { logout, me } from "../auth/auth.service";
+import { Sidebar } from "../../components/layout/sidebar";
 
 export default function Panel() {
   const navigate = useNavigate();
@@ -23,11 +24,11 @@ export default function Panel() {
   if (!user) return <p>Cargando…</p>;
 
   return (
-    <main>
-      <h1>Hola, {user.nombres || user.username}</h1>
-      <button type="button" className="btn btn-primary" onClick={handleLogout}>
-        Cerrar sesión
-      </button>
+    <main className="app-layout">
+      <Sidebar user={user} onLogout={handleLogout} />
+      <div className="app-content">
+        <Outlet />
+      </div>
     </main>
   );
 }
