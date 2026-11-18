@@ -1,11 +1,10 @@
 async function request(endpoint, options = {}) {
-  const { method = "GET", data = null, params = null } = options;
+  const { method = "GET", data = null, params = {} } = options;
 
   let url = `/api${endpoint}`;
-  if (params) {
-    const query = new URLSearchParams(params).toString();
-    url += `?${query}`;
-  }
+  const cleanEntries = Object.entries(params).filter(([clave, valor]) => valor != null && valor !== "")
+  const query = new URLSearchParams(cleanEntries).toString();
+  if (query) url += `?${query}`;
 
   const fetchOptions = {
     method,
