@@ -50,8 +50,10 @@ const applyFilters = (query, filters  = {}) => {
 };
 
 exports.list = async (idtienda, filters = {}) => {
-  const limit = 5;
-  const page = 1;
+  let { page = 1, limit = 5 } = filters;
+  page = Math.max(Number(filters.page), 1);
+  limit = Math.min(Number(filters.limit), 100);
+
   const offset = (page - 1) * limit;
 
   const baseQuery = () =>
@@ -76,8 +78,6 @@ exports.list = async (idtienda, filters = {}) => {
     .limit(limit)
     .offset(offset);
 
-  
-  
   return {
     items,
     total: Number(total),
