@@ -3,8 +3,8 @@ import { Pencil, Trash2 } from "lucide-react";
 
 export function DataTable(props) {
   const {
-    columnas,
-    filas,
+    columnas = [],
+    filas = [],
     cargando = false,
     error = "",
     idEnEdicion,
@@ -13,8 +13,8 @@ export function DataTable(props) {
     accionesExtra,
   } = props;
 
-  if (cargando) return <p className="crud-empty" role="status">Cargando…</p>;
   if (error) return <Alert type="error">{error}</Alert>;
+  if (cargando) return <p className="crud-empty" role="status">Cargando…</p>;
   if (filas.length === 0) return <p className="crud-empty">No hay registros.</p>;
 
   const tieneAcciones = alEditar || alEliminar || accionesExtra;
