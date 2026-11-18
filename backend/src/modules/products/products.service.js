@@ -51,8 +51,8 @@ const applyFilters = (query, filters  = {}) => {
 
 exports.list = async (idtienda, filters = {}) => {
   let { page = 1, limit = 5 } = filters;
-  page = Math.max(Number(filters.page), 1);
-  limit = Math.min(Number(filters.limit), 100);
+  page = Math.max(Number(page), 1);
+  limit = Math.min(Number(limit), 100);
 
   const offset = (page - 1) * limit;
 
