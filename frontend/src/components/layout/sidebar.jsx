@@ -6,7 +6,7 @@ const SECCIONES = [
     title: "Operaciones",
     items: [
       { to: "/tiendas", label: "Tiendas", roles: ["superadmin"] },
-      { to: "/catalago-productos", label: "Productos", roles: ["admin", "user"] },
+      { to: "/catalogo-productos", label: "Productos", roles: ["admin", "user"] },
       { to: "/ventas", label: "Ventas", roles: ["admin", "user"] },
       { to: "/tpv", label: "Punto de venta", roles: ["admin", "user"] },
     ],
