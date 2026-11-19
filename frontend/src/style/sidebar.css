@@ -76,8 +76,8 @@
 }
 
 .sidebar-link[aria-current="page"] {
-  color: var(--tinta);
-  background: var(--etiqueta);
+  color: var(--papel);
+  background: var(--verde-caja-oscuro);
 }
 
 .sidebar-logout {

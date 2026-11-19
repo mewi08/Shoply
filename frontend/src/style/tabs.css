@@ -29,3 +29,17 @@
   background: var(--verde-suave);
   border-color: var(--verde-caja);
 }
+
+.catalog-filters {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  gap: 1rem;
+  align-items: end;
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 40rem) {
+  .catalog-filters {
+    grid-template-columns: 1fr;
+  }
+}
