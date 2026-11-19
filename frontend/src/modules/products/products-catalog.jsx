@@ -38,11 +38,10 @@ export default function ProductsCatalog() {
   const [idmarca, setIdmarca] = useState("");
   const [idcategoria, setIdcategoria] = useState("");
   const [page, setPage] = useState(1);
+  const [searchVersion, setSearchVersion] = useState(0);
 
   const { products, total, totalPages, catalogs, loading, loadError } =
     useProducts({ buscar, idmarca, idcategoria, estado: 1, page });
-
-  const carouselKey = `${page}-${buscar}-${idmarca}-${idcategoria}`;
 
   const handleSearch = (text) => {
     setBuscar(text);
@@ -54,6 +53,14 @@ export default function ProductsCatalog() {
     setPage(1);
   };
 
+  const clearFilters = () => {
+    setBuscar("");
+    setIdmarca("");
+    setIdcategoria("");
+    setPage(1);
+    setSearchVersion((version) => version + 1);
+  };
+
   return (
     <CrudPage
       titulo="Productos"
@@ -61,6 +68,7 @@ export default function ProductsCatalog() {
       ruta={trail}
     >
       <SearchBar
+        key={searchVersion}
         etiqueta="Buscar un producto"
         placeholder="Nombre o código"
         alBuscar={handleSearch}
@@ -79,6 +87,9 @@ export default function ProductsCatalog() {
           options={catalogs.categories}
           onChange={changeFilter(setIdcategoria)}
         />
+        <button type="button" className="btn btn-secondary" onClick={clearFilters}>
+          Limpiar filtros
+        </button>
       </div>
 
       <CrudCard
@@ -89,7 +100,7 @@ export default function ProductsCatalog() {
         totalPaginas={totalPages}
         alCambiarPagina={setPage}
       >
-        <CardCarousel key={carouselKey} loading={loading} error={loadError}>
+        <CardCarousel loading={loading} error={loadError}>
           {products.map((product) => (
             <ItemCard
               key={product.id}
