@@ -10,7 +10,7 @@ const toForm = (unit) =>
   Object.fromEntries(
     FIELDS.map((f) => [
       f.name,
-      unit?.[f.name] != null ? String(unit[f.name]) : "",
+      unit?.[f.name] ? String(unit[f.name]) : ""
     ]),
   );
 
