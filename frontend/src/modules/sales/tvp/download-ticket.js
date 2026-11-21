@@ -1,14 +1,29 @@
+import { jsPDF } from "jspdf";
 import { buildTicketLines } from "./ticket.js";
 
+const TICKET_WIDTH_MM = 80;
+const LINE_HEIGHT_MM = 4;
+const MARGIN_MM = 4;
+
 export function downloadTicket(sale) {
-  const text = buildTicketLines(sale).map((line) => line.text).join("\n");
-  const file = new Blob([text], { type: "text/plain;charset=utf-8" });
-  const url = URL.createObjectURL(file);
+  const lines = buildTicketLines(sale);
+  const pageHeight = MARGIN_MM * 2 + lines.length * LINE_HEIGHT_MM;
 
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = `${sale.number}.txt`;
-  link.click();
+  const doc = new jsPDF({
+    unit: "mm",
+    format: [TICKET_WIDTH_MM, pageHeight],
+  });
 
-  URL.revokeObjectURL(url);
+  doc.setFont("courier", "normal");
+  doc.setFontSize(8);
+
+  lines.forEach((line, index) => {
+    if (line.bold) doc.setFont("courier", "bold");
+    else doc.setFont("courier", "normal");
+
+    const y = MARGIN_MM + (index + 1) * LINE_HEIGHT_MM;
+    doc.text(line.text, MARGIN_MM, y);
+  });
+
+  doc.save(`${sale.number}.pdf`);
 }
