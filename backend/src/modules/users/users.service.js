@@ -1,14 +1,33 @@
 const db = require("../../shared/config/db");
 const { httpError } = require("../../shared/utils/response");
-const {
-  requireFields,
-  checkCredentials,
-} = require("../../shared/utils/validators");
+const { requireFields, checkCredentials } = require("../../shared/utils/validators");
 const { pick } = require("../../shared/utils/sanitize");
 const { hashPassword, comparePassword } = require("../../shared/utils/hash");
 const { scoped } = require("../../shared/utils/permissions");
 
 const createFields = ["idpersona", "username", "password", "rol"];
+
+const SUPER_COLUMNS = [
+  "u.id",
+  "t.nombre as tienda",
+  "p.telefono",
+  "p.nombres",
+  "p.ape_paterno",
+  "p.tipo_doc",
+  "p.num_doc",
+  "u.rol",
+  "u.estado",
+  "u.ultimo_acceso",
+];
+
+const ADMIN_COLUMNS = [
+  "u.id",
+  "u.username",
+  "u.rol",
+  "u.ultimo_acceso",
+  "u.estado",
+];
+
 const ROLES = ["admin", "user", "superadmin"];
 const isSuper = (user) => user.rol === "superadmin";
 
@@ -17,21 +36,13 @@ const checkRol = (rol, user) => {
     throw httpError(400, "Rol inválido");
 };
 
-const baseQuery = (user) =>
-  scoped(db("usuarios as u"), user)
+const baseQuery = (user) => {
+  const query = scoped(db("usuarios as u"), user)
     .join("personas as p", "u.idpersona", "p.id")
-    .select(
-      "u.id",
-      "u.idpersona",
-      "u.idtienda",
-      "u.username",
-      "u.rol",
-      "u.ultimo_acceso",
-      "u.estado",
-      "p.nombres",
-      "p.ape_paterno",
-      "p.razon_social",
-    );
+    .leftJoin("tiendas as t", "u.idtienda", "t.id");
+
+  return query.select(isSuper(user) ? SUPER_COLUMNS : ADMIN_COLUMNS);
+};
 
 exports.list = (user) => baseQuery(user).orderBy("u.username");
 
@@ -93,14 +104,17 @@ exports.updateMe = async (data, user) => {
 exports.changePassword = async (data, user) => {
   if (!data) throw httpError(400, "Datos inválidos");
   const { password, newPassword } = pick(data, ["password", "newPassword"]);
-  
-  checkCredentials({ password: newPassword }, { usernameRequired: false, passwordRequired: true });
+
+  checkCredentials(
+    { password: newPassword },
+    { usernameRequired: false, passwordRequired: true },
+  );
 
   const row = await db("usuarios").where({ id: user.id }).first("password");
   const valid = comparePassword(password, row.password);
-  
-  if(!valid) throw httpError(400, "Contraseña incorrecta");
-  
+
+  if (!valid) throw httpError(400, "Contraseña incorrecta");
+
   const hash = hashPassword(newPassword);
   await db("usuarios").where({ id: user.id }).update({ password: hash });
 };
