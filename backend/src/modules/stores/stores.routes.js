@@ -3,6 +3,7 @@ const controller = require('./stores.controller');
 const { requireLevel } = require('../../shared/middlewares/auth');
 
 router.get('/', requireLevel('superadmin'), controller.list);
+router.get('/:id/detail', requireLevel('superadmin'), controller.detail);
 router.get('/mi-tienda', requireLevel('admin', 'user'), controller.getMyStore);
 router.get('/:id', requireLevel('superadmin'), controller.get);
 router.put('/mi-tienda', requireLevel('admin'), controller.updateMyStore);

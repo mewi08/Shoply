@@ -30,6 +30,12 @@ exports.list = async (req, res) => {
   sendSuccess(res, { data });
 };
 
+exports.detail = async (req, res) => {
+  const id = req.params.id;
+  const data = await service.detail(id);
+  sendSuccess(res, { data });
+};
+
 exports.get = async (req, res) => {
   const id = req.params.id;
   const data = await service.get(id);

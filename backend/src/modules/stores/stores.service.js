@@ -31,6 +31,29 @@ exports.list = async () => {
   return data;
 };
 
+exports.detail = async (id) => {
+  const store = await db("tiendas")
+    .select('nombre', 'telefono as contacto', 'direccion')
+    .where({ id }).first();
+
+  if (!store) throw httpError(404, "Tienda no encontrada");
+
+  const users = await db("usuarios as u")
+    .join("personas as p", "u.idpersona", "p.id")
+    .where("u.idtienda", id)
+    .select(
+      "u.id", "u.username", "u.rol", "u.estado", "u.ultimo_acceso",
+      "p.nombres", "p.ape_paterno", "p.num_doc",
+    )
+    .orderBy("u.rol", "desc");
+
+  const [{ total }] = await db("clientes")
+    .where({ idtienda: id })
+    .count({ total: "*" });
+
+  return { ...store, usuarios: users, clientes: Number(total) };
+};
+
 exports.get = async (id) => {
   const row = await baseQuery().where({ id }).first();
   if (!row) throw httpError(404, 'Tienda no encontrada');
