@@ -67,3 +67,15 @@ Cada carpeta tiene su propio README con los detalles de instalación y scripts:
 Cada consulta se filtra por el `idtienda` del usuario autenticado, así una tienda nunca puede ver ni modificar datos de otra. Si un recurso pertenece a otra tienda, la API responde 404.
 
 ## Novedades
+
+1. Crear la estructura de navegación: sidebar con secciones.
+2. Crear página de Administración con tarjetas.
+3. Crear la hoja de estilos del sidebar y de la página de Administración.
+4. Dividir el formulario de producto en pasos.
+5. Dividir el registro de usuario en pasos.
+6. Cambiar la búsqueda de productos del servidor (filtros `buscar`, `idmarca`, `idcategoria`, `estado`, `page`, `limit`).
+7. Crear el catálogo de productos con cards, filtros y paginación del servidor.
+8. Crear el TPV (punto de venta) con pasos: escanear, carrito, resumen, cobro, ticket.
+9. Agregar el módulo de clientes en el TPV (selector y registro rápido).
+10. Usar jsPDF para descargar el ticket en PDF.
+11. Agregar el detalle de tienda (dueño, usuarios y total de clientes) en el servicio de tiendas.
