@@ -1,19 +1,20 @@
 import { NavLink } from "react-router-dom";
-import '../../style/sidebar.css';
 
 const SECCIONES = [
   {
-    title: "Operaciones",
+    title: "General",
     items: [
+      { to: "/", label: "Inicio", roles:["superadmin", "admin", "user"]},
       { to: "/tiendas", label: "Tiendas", roles: ["superadmin"] },
-      { to: "/catalogo-productos", label: "Productos", roles: ["admin", "user"] },
-      { to: "/ventas", label: "Ventas", roles: ["admin", "user"] },
       { to: "/tpv", label: "Punto de venta", roles: ["admin", "user"] },
+      { to: "/ventas", label: "Ventas", roles: ["admin", "user"] },
+      { to: "/catalogo-productos", label: "Productos", roles: ["admin", "user"] },
     ],
   },
   {
     title: "Gestión",
     items: [
+      { to: "/usuarios", label: "Usuarios", roles:["superadmin", "admin"]},
       { to: "/reportes", label: "Reportes", roles:["admin"]},
       { to: "/administracion", label: "Administración", roles: ["superadmin", "admin"] },
     ],
