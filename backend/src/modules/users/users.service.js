@@ -1,120 +1,95 @@
 const db = require("../../shared/config/db");
 const { httpError } = require("../../shared/utils/response");
-const { requireFields, checkCredentials } = require("../../shared/utils/validators");
+const {
+  requireFields,
+  checkCredentials,
+} = require("../../shared/utils/validators");
 const { pick } = require("../../shared/utils/sanitize");
 const { hashPassword, comparePassword } = require("../../shared/utils/hash");
-const { scoped } = require("../../shared/utils/permissions");
 
-const createFields = ["idpersona", "username", "password", "rol"];
+const ROLES = ["admin", "user"];
+const createFields = ["idpersona", "username", "password"];
+const updateFields = ["username", "rol"];
 
-const SUPER_COLUMNS = [
-  "u.id",
-  "t.nombre as tienda",
-  "p.telefono",
-  "p.nombres",
-  "p.ape_paterno",
-  "p.tipo_doc",
-  "p.num_doc",
-  "u.rol",
-  "u.estado",
-  "u.ultimo_acceso",
-];
-
-const ADMIN_COLUMNS = [
-  "u.id",
-  "u.username",
-  "u.rol",
-  "u.ultimo_acceso",
-  "u.estado",
-];
-
-const ROLES = ["admin", "user", "superadmin"];
-const isSuper = (user) => user.rol === "superadmin";
-
-const checkRol = (rol, user) => {
-  if (!(isSuper(user) ? ROLES : ["user"]).includes(rol))
-    throw httpError(400, "Rol inválido");
+const checkRol = (rol) => {
+  if (!ROLES.includes(rol)) throw httpError(400, "Rol inválido");
 };
 
-const baseQuery = (user) => {
-  const query = scoped(db("usuarios as u"), user)
-    .join("personas as p", "u.idpersona", "p.id")
-    .leftJoin("tiendas as t", "u.idtienda", "t.id");
+const baseQuery = (user) =>
+  db("usuarios")
+    .where("idtienda", user.idtienda)
+    .whereNot("id", user.id)
+    .select("id", "username", "rol", "ultimo_acceso", "estado");
 
-  return query.select(isSuper(user) ? SUPER_COLUMNS : ADMIN_COLUMNS);
-};
-
-exports.list = (user) => baseQuery(user).orderBy("u.username");
+exports.list = (user) => baseQuery(user).orderBy("username");
 
 exports.get = async (id, user) => {
-  const row = await baseQuery(user).where("u.id", id).first();
+  const row = await baseQuery(user).where({ id }).first();
   if (!row) throw httpError(404, "Usuario no encontrado");
   return row;
 };
 
 exports.create = async (data, user) => {
   if (!data) throw httpError(400, "Datos inválidos");
-  const cleanData = pick(
-    data,
-    isSuper(user) ? [...createFields, "idtienda"] : createFields,
-  );
 
+  const cleanData = pick(data, createFields);
   requireFields(cleanData, createFields);
   checkCredentials(cleanData, { passwordRequired: true });
-  checkRol(cleanData.rol, user);
 
-  if (!isSuper(user)) cleanData.idtienda = user.idtienda;
-  else if (cleanData.rol !== "superadmin")
-    requireFields(cleanData, ["idtienda"]);
+  const [id] = await db("usuarios").insert({
+    idpersona: cleanData.idpersona,
+    idtienda: user.idtienda,
+    username: cleanData.username,
+    password: hashPassword(cleanData.password),
+    rol: "user",
+  });
 
-  cleanData.password = hashPassword(cleanData.password);
-  const [id] = await db("usuarios").insert(cleanData);
   return { id };
 };
 
 exports.update = async (id, data, user) => {
   if (!data) throw httpError(400, "Datos inválidos");
-  const { rol } = pick(data, ["rol"]);
-  requireFields({ rol }, ["rol"]);
-  checkRol(rol, user);
+
+  const cleanData = pick(data, updateFields);
+  if (!Object.keys(cleanData).length)
+    throw httpError(400, "No hay datos para actualizar");
+
+  checkRol(cleanData.rol);
   if (Number(id) === user.id)
     throw httpError(400, "No puedes cambiar tu propio rol");
 
-  const num = await scoped(db("usuarios"), user).where({ id }).update({ rol });
+  checkCredentials({ username: cleanData.username });
+
+  const num = await db("usuarios")
+    .where({ id, idtienda: user.idtienda })
+    .update(cleanData);
   if (!num) throw httpError(404, "Usuario no encontrado");
 };
 
-exports.remove = async (id, user) => {
+exports.toggleStatus = async (id, user) => {
   if (Number(id) === user.id)
     throw httpError(400, "No puedes desactivar tu propio usuario");
 
-  const num = await scoped(db("usuarios"), user)
-    .where({ id })
+  const num = await db("usuarios")
+    .where({ id, idtienda: user.idtienda })
     .update({ estado: db.raw("NOT estado") });
   if (!num) throw httpError(404, "Usuario no encontrado");
 };
 
-exports.updateMe = async (data, user) => {
-  if (!data) throw httpError(400, "Datos inválidos");
-  const { username } = pick(data, ["username"]);
-  checkCredentials({ username });
-  await db("usuarios").where({ id: user.id }).update({ username });
-};
-
 exports.changePassword = async (data, user) => {
   if (!data) throw httpError(400, "Datos inválidos");
-  const { password, newPassword } = pick(data, ["password", "newPassword"]);
 
+  const { password, newPassword } = pick(data, ["password", "newPassword"]);
   checkCredentials(
     { password: newPassword },
     { usernameRequired: false, passwordRequired: true },
   );
 
   const row = await db("usuarios").where({ id: user.id }).first("password");
-  const valid = comparePassword(password, row.password);
+  if (!comparePassword(password, row.password))
+    throw httpError(400, "Contraseña incorrecta");
 
-  if (!valid) throw httpError(400, "Contraseña incorrecta");
-
-  const hash = hashPassword(newPassword);
-  await db("usuarios").where({ id: user.id }).update({ password: hash });
+  await db("usuarios")
+    .where({ id: user.id })
+    .update({ password: hashPassword(newPassword) });
 };

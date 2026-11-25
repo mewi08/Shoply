@@ -29,18 +29,11 @@ exports.update = async (req, res) => {
   sendSuccess(res, { message: 'Usuario actualizado' });
 };
 
-exports.remove = async (req, res) => {
+exports.toggleStatus = async (req, res) => {
   const user = req.user;
   const id = req.params.id;
-  await service.remove(id, user);
+  await service.toggleStatus(id, user);
   sendSuccess(res, { message: 'Estado actualizado' });
-};
-
-exports.updateMe = async (req, res) => {
-  const user = req.user;
-  const data = req.body;
-  await service.updateMe(data, user);
-  sendSuccess(res, { message: 'Actualización exitosa' });
 };
 
 exports.changePassword = async (req, res) => {
